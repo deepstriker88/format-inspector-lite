@@ -1,0 +1,29 @@
+name: Hosted CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  hosted-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Hosted billing and entitlement tests
+        working-directory: hosted
+        run: npm test
+      - name: Verify package payload still excludes hosted code
+        run: |
+          npm pack --dry-run --json --ignore-scripts > /tmp/pack.json
+          node -e "const x=require('/tmp/pack.json')[0]; if(x.files.some(f=>f.path.startsWith('hosted/'))) process.exit(2)"

@@ -1,0 +1,41 @@
+services:
+  format-inspector-cloud:
+    build:
+      context: ..
+      dockerfile: hosted/Dockerfile
+    container_name: format-inspector-cloud
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "8787"
+      DB_PATH: /data/commerce.sqlite
+      BASE_URL: https://format-inspector.eztoolgo.duckdns.org
+    volumes:
+      - format-inspector-cloud-data:/data
+    cpus: "0.25"
+    mem_limit: 256m
+    mem_reservation: 64m
+    pids_limit: 64
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - my_network
+
+volumes:
+  format-inspector-cloud-data:
+
+networks:
+  my_network:
+    external: true

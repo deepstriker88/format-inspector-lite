@@ -31,6 +31,17 @@ console.log(inspectBatch([{format:'date',value:'2024-02-29'}]));
 ## Requirements
 Node.js 18 or newer; no third-party dependencies.
 
+## Optional hosted API
+The MIT npm package remains fully usable offline with no account. An optional hosted layer is maintained in hosted/ for managed API keys, quotas and Paddle-backed subscription entitlement.
+
+- Pro preview: $2.99/month — 25,000 hosted calls
+- Team preview: $6.99/month — 250,000 hosted calls
+- Paddle environment defaults to sandbox and live billing requires a separate explicit gate
+- Product-specific Paddle sandbox catalog is not connected yet, so payment buttons remain disabled
+- Hosted Docker budget: 0.25 vCPU / 256 MiB RAM / 64 PIDs
+
+See [hosted/README.md](hosted/README.md) for the current implementation and verified safety model.
+
 ## Security and limitations
 Local-only inspection; no requests, no persistence. URI accepts only HTTP(S) without credentials. Email checking is intentionally syntactic, not mailbox verification. Hostnames do not support IDNs unless converted to ASCII first. This is not a JSON Schema or AJV implementation. Input is bounded, but parsing can still consume CPU.
 

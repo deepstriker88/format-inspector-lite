@@ -1,0 +1,14 @@
+{
+  "name": "format-inspector-lite-cloud",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Hosted API and Paddle billing gateway for format-inspector-lite",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "status": "READY",
+  "verified_at": "2026-11-25",
+  "product_scope_verified": true,
+  "feature_claims_verified": true,
+  "trust_claims_verified": true,
+  "desktop_checked": true,
+  "mobile_checked": true,
+  "pricing_provider_verified": false,
+  "sandbox_checkout_tested": false,
+  "payment_state": "DISCONNECTED_SAFE_PREVIEW",
+  "evidence_urls": [
+    "https://github.com/deepstriker88/format-inspector-lite",
+    "https://github.com/deepstriker88/format-inspector-lite/tree/main/hosted"
+  ],
+  "browser_qa_file": "../docs/BROWSER_QA.json"
+}

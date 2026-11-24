@@ -1,0 +1,59 @@
+{
+  "verified_at": "2026-11-25",
+  "playwright_version": "1.65.1",
+  "browser": "159.0.8154.6",
+  "result": "PASS",
+  "viewports": {
+    "desktop": {
+      "ok": true,
+      "http_status": 200,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scroll_width": 1440,
+      "horizontal_overflow": false,
+      "h1": "Validate common text formats locally or through a managed API",
+      "pricing_cards": 3,
+      "details_blocks": 1,
+      "legal_links": {
+        "terms": true,
+        "privacy": true,
+        "refund": true
+      },
+      "plan_buttons_disabled_without_catalog": true,
+      "plan_status": "Pricing preview only. Paddle sandbox catalog is not connected yet; no payment can be made.",
+      "demo_result": "{\n  \"valid\": true,\n  \"code\": \"OK\"\n}",
+      "page_errors": [],
+      "console_errors": []
+    },
+    "mobile": {
+      "ok": true,
+      "http_status": 200,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_width": 390,
+      "horizontal_overflow": false,
+      "h1": "Validate common text formats locally or through a managed API",
+      "pricing_cards": 3,
+      "details_blocks": 1,
+      "legal_links": {
+        "terms": true,
+        "privacy": true,
+        "refund": true
+      },
+      "plan_buttons_disabled_without_catalog": true,
+      "plan_status": "Pricing preview only. Paddle sandbox catalog is not connected yet; no payment can be made.",
+      "demo_result": "{\n  \"valid\": true,\n  \"code\": \"OK\"\n}",
+      "page_errors": [],
+      "console_errors": []
+    }
+  },
+  "notes": [
+    "Paddle sandbox catalog intentionally disconnected during browser QA",
+    "Hosted plan buttons remained disabled without provider catalog",
+    "Demo API was exercised from the rendered page in both viewports"
+  ]
+}
