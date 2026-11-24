@@ -1,0 +1,49 @@
+{
+  "verified_at": "2026-11-25",
+  "public_url": "https://format-inspector.eztoolgo.duckdns.org",
+  "tls": {
+    "subject_cn": "format-inspector.eztoolgo.duckdns.org",
+    "issuer": "Let's Encrypt YE1",
+    "not_after": "2027-02-22T16:54:11Z",
+    "verification": "OK"
+  },
+  "http": {
+    "root": 200,
+    "healthz": 200,
+    "terms": 200,
+    "privacy": 200,
+    "refund": 200,
+    "config_json": 200,
+    "robots_txt": 200,
+    "sitemap_xml": 200
+  },
+  "product_behavior": {
+    "demo_endpoint": "/demo/inspect",
+    "demo_status": 200,
+    "paid_endpoint": "/v1/inspect",
+    "paid_without_api_key_status": 401,
+    "billing_activation_without_provider_catalog_status": 503
+  },
+  "billing": {
+    "environment": "sandbox",
+    "billing_ready": false,
+    "live_billing": false
+  },
+  "discovery": {
+    "indexnow_key_endpoint_status": 200,
+    "indexnow_submission_status": 202,
+    "url_count": 4
+  },
+  "runtime_snapshot": {
+    "cpu": "0.00%",
+    "memory": "15.24 MiB",
+    "memory_limit": "256 MiB",
+    "pids": 7,
+    "vcpu_limit": 0.25
+  },
+  "notes": [
+    "Paddle sandbox product/price catalog is intentionally not connected yet",
+    "Live billing remains double-locked and was not enabled",
+    "IndexNow key is runtime configuration and is not stored in Git"
+  ]
+}

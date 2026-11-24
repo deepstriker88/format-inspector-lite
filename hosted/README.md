@@ -2,6 +2,12 @@
 
 Optional hosted API for the free MIT-licensed `format-inspector-lite` package
 
+## Public sandbox preview
+- URL: https://format-inspector.eztoolgo.duckdns.org
+- HTTPS health verified: 200
+- Paddle catalog: not connected yet, so `billingReady=false` and payment cannot be started
+- robots.txt and sitemap.xml are public; IndexNow submission was accepted with HTTP 202
+
 ## Billing status
 - Default environment: Paddle sandbox
 - Live money: disabled until separate explicit approval

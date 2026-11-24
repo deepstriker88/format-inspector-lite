@@ -40,6 +40,8 @@ The MIT npm package remains fully usable offline with no account. An optional ho
 - Product-specific Paddle sandbox catalog is not connected yet, so payment buttons remain disabled
 - Hosted Docker budget: 0.25 vCPU / 256 MiB RAM / 64 PIDs
 
+Sandbox preview: https://format-inspector.eztoolgo.duckdns.org
+
 See [hosted/README.md](hosted/README.md) for the current implementation and verified safety model.
 
 ## Security and limitations
@@ -49,7 +51,7 @@ Local-only inspection; no requests, no persistence. URI accepts only HTTP(S) wit
 For unsupported formats, check spelling. For malformed JSON, catch `SyntaxError`. Run `npm test` to verify installation.
 
 ## Browser preview
-A static browser interface is included at `examples/index.html`. Serve the repository root with a local static server to preview it. No remote API is used. Public hosting and browser accessibility testing have not yet been completed.
+A static browser interface is included at `examples/index.html`; it remains local-only and makes no remote API calls. The separate hosted landing/API is publicly available at https://format-inspector.eztoolgo.duckdns.org and its desktop/mobile landing flow was browser-tested before deployment.
 
 ## Offline batch CLI and CSV / JSONL export
 This package includes a local command without a persistent server or external dependencies:
