@@ -1,3 +1,5 @@
+name: format-inspector-lite-hosted
+
 services:
   format-inspector-cloud:
     build:
@@ -35,6 +37,8 @@ services:
 
 volumes:
   format-inspector-cloud-data:
+    name: hosted_format-inspector-cloud-data
+    external: true
 
 networks:
   my_network:
