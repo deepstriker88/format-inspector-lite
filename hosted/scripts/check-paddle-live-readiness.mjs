@@ -80,17 +80,13 @@ async function paddleGet(apiPath, key, fetchImpl) {
 }
 
 export async function fetchLiveReadiness(key, domain, fetchImpl = fetch) {
-  const [verification, domains, checkout] = await Promise.all([
+  const [verification, checkout] = await Promise.all([
     paddleGet("/verifications?verification_type=onboarding&per_page=10", key, fetchImpl),
-    paddleGet(`/checkout-domains?domain=${encodeURIComponent(domain)}&per_page=50`, key, fetchImpl),
     paddleGet("/settings/checkout-url", key, fetchImpl),
   ]);
 
   const onboarding = Array.isArray(verification.data)
     ? verification.data.find((item) => item?.verification_type === "onboarding")
-    : null;
-  const domainRecord = Array.isArray(domains.data)
-    ? domains.data.find((item) => String(item?.domain || "").toLowerCase() === domain)
     : null;
   const defaultUrl = String(checkout?.data?.default_url || "");
   let defaultHost = "";
@@ -100,6 +96,29 @@ export async function fetchLiveReadiness(key, domain, fetchImpl = fetch) {
     defaultHost = "";
   }
 
+  const currentDomains = await paddleGet(
+    `/checkout-domains?domain=${encodeURIComponent(domain)}&per_page=50`,
+    key,
+    fetchImpl,
+  );
+  let defaultDomains = currentDomains;
+  if (defaultHost && defaultHost !== domain) {
+    defaultDomains = await paddleGet(
+      `/checkout-domains?domain=${encodeURIComponent(defaultHost)}&per_page=50`,
+      key,
+      fetchImpl,
+    );
+  }
+
+  const domainRecord = Array.isArray(currentDomains.data)
+    ? currentDomains.data.find((item) => String(item?.domain || "").toLowerCase() === domain)
+    : null;
+  const defaultDomainRecord = defaultHost && Array.isArray(defaultDomains.data)
+    ? defaultDomains.data.find(
+        (item) => String(item?.domain || "").toLowerCase() === defaultHost,
+      )
+    : null;
+
   return {
     onboardingStatus: onboarding?.status || "missing",
     onboardingSteps: Array.isArray(onboarding?.steps)
@@ -108,6 +127,9 @@ export async function fetchLiveReadiness(key, domain, fetchImpl = fetch) {
     domainStatus: domainRecord?.status || "missing",
     applePayStatus: domainRecord?.payment_method_verification?.apple_pay?.status || "unknown",
     defaultPaymentLink: defaultUrl || null,
+    defaultPaymentLinkConfigured: Boolean(defaultUrl),
+    defaultPaymentLinkHost: defaultHost || null,
+    defaultPaymentLinkDomainStatus: defaultDomainRecord?.status || "missing",
     defaultPaymentLinkMatchesDomain: defaultHost === domain,
   };
 }
@@ -146,8 +168,10 @@ export function summarize(remote, policies, domain) {
   if (remote.domainStatus !== "approved") {
     blockers.push(`checkout_domain_${remote.domainStatus}`);
   }
-  if (!remote.defaultPaymentLinkMatchesDomain) {
-    blockers.push("default_payment_link_not_on_approved_domain");
+  if (!remote.defaultPaymentLinkConfigured) {
+    blockers.push("default_payment_link_missing");
+  } else if (remote.defaultPaymentLinkDomainStatus !== "approved") {
+    blockers.push(`default_payment_link_domain_${remote.defaultPaymentLinkDomainStatus}`);
   }
   blockers.push(...policies.blockers);
 

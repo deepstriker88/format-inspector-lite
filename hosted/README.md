@@ -11,6 +11,7 @@ Optional hosted API for the free MIT-licensed `format-inspector-lite` package
 ## Billing status
 - Default environment: Paddle sandbox
 - Live money: disabled until separate explicit approval
+- Existing account-level Paddle default payment link is preserved during sandbox bootstrap
 - Free local npm package remains fully usable without this service
 - Pro: $2.99/month, 25,000 API calls/month
 - Team: $6.99/month, 250,000 API calls/month

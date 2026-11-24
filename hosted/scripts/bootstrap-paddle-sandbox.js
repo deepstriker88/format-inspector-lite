@@ -14,6 +14,7 @@ const requiredPermissions = [
   "price.write",
   "client_token.write",
   "notification_setting.write",
+  "checkout_settings.read",
   "checkout_settings.write",
 ];
 
@@ -96,9 +97,15 @@ async function main() {
     description: "Paddle.js token for https://format-inspector.eztoolgo.duckdns.org",
   });
 
-  const checkoutUrl = await paddle("PATCH", "/settings/checkout-url", {
-    default_url: "https://format-inspector.eztoolgo.duckdns.org",
-  });
+  const existingCheckoutUrl = await paddle("GET", "/settings/checkout-url");
+  let checkoutUrl = existingCheckoutUrl;
+  let defaultPaymentLinkChanged = false;
+  if (!existingCheckoutUrl?.default_url) {
+    checkoutUrl = await paddle("PATCH", "/settings/checkout-url", {
+      default_url: "https://format-inspector.eztoolgo.duckdns.org",
+    });
+    defaultPaymentLinkChanged = true;
+  }
 
   const notification = await paddle("POST", "/notification-settings", {
     description: "Format Inspector Lite Cloud sandbox entitlement webhook",
@@ -148,6 +155,7 @@ async function main() {
     teamPriceId: team.id,
     webhookDestinationId: notification.id,
     defaultPaymentLink: checkoutUrl.default_url,
+    defaultPaymentLinkChanged,
     clientTokenCreated: true,
     webhookSecretStored: true,
     apiKeyStored: false,

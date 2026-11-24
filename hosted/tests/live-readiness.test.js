@@ -38,16 +38,19 @@ test("classifies Paddle credentials and checkout domain", () => {
   assert.throws(() => validateDomain("https://example.com"), /Invalid checkout domain/);
 });
 
-test("fetches only read-only readiness endpoints and summarizes approved state", async () => {
+test("fetches account default payment link separately from the product domain", async () => {
   const calls = [];
   const responses = new Map([
     ["/verifications?verification_type=onboarding&per_page=10", {
       data: [{ verification_type: "onboarding", status: "completed", steps: [{ key: "account_setup", status: "completed" }] }],
     }],
+    ["/settings/checkout-url", { data: { default_url: "https://billing.example.com/" } }],
     ["/checkout-domains?domain=format-inspector-lite.example.com&per_page=50", {
       data: [{ domain: "format-inspector-lite.example.com", status: "approved", payment_method_verification: { apple_pay: { status: "verified" } } }],
     }],
-    ["/settings/checkout-url", { data: { default_url: "https://format-inspector-lite.example.com/" } }],
+    ["/checkout-domains?domain=billing.example.com&per_page=50", {
+      data: [{ domain: "billing.example.com", status: "approved" }],
+    }],
   ]);
   const fakeFetch = async (url, options) => {
     const parsed = new URL(url);
@@ -58,8 +61,12 @@ test("fetches only read-only readiness endpoints and summarizes approved state",
   const remote = await fetchLiveReadiness(VALID_KEY, "format-inspector-lite.example.com", fakeFetch);
   assert.equal(remote.onboardingStatus, "completed");
   assert.equal(remote.domainStatus, "approved");
-  assert.equal(remote.defaultPaymentLinkMatchesDomain, true);
-  assert.deepEqual(calls.map((x) => x.method), ["GET", "GET", "GET"]);
+  assert.equal(remote.defaultPaymentLinkConfigured, true);
+  assert.equal(remote.defaultPaymentLinkHost, "billing.example.com");
+  assert.equal(remote.defaultPaymentLinkDomainStatus, "approved");
+  assert.equal(remote.defaultPaymentLinkMatchesDomain, false);
+  assert.ok(calls.every((x) => x.method === "GET"));
+  assert.equal(calls.length, 4);
 });
 
 test("policy inspection fails closed on sandbox placeholders", () => {
@@ -88,15 +95,34 @@ test("current public policies are finalized for live review", () => {
   assert.doesNotMatch(combined, /Sandbox draft/i);
 });
 
-test("summary requires verification, approved domain, default link, and final policies", () => {
+test("summary accepts a shared approved account default payment link", () => {
   const result = summarize({
     onboardingStatus: "completed",
     onboardingSteps: [],
     domainStatus: "approved",
     applePayStatus: "verified",
-    defaultPaymentLink: "https://format-inspector-lite.example.com/",
-    defaultPaymentLinkMatchesDomain: true,
+    defaultPaymentLink: "https://billing.example.com/",
+    defaultPaymentLinkConfigured: true,
+    defaultPaymentLinkHost: "billing.example.com",
+    defaultPaymentLinkDomainStatus: "approved",
+    defaultPaymentLinkMatchesDomain: false,
   }, { finalized: true, blockers: [] }, "format-inspector-lite.example.com");
   assert.equal(result.readyForLiveCutover, true);
   assert.deepEqual(result.blockers, []);
+});
+
+test("summary blocks an unapproved account default payment link", () => {
+  const result = summarize({
+    onboardingStatus: "completed",
+    onboardingSteps: [],
+    domainStatus: "approved",
+    applePayStatus: "verified",
+    defaultPaymentLink: "https://billing.example.com/",
+    defaultPaymentLinkConfigured: true,
+    defaultPaymentLinkHost: "billing.example.com",
+    defaultPaymentLinkDomainStatus: "pending",
+    defaultPaymentLinkMatchesDomain: false,
+  }, { finalized: true, blockers: [] }, "format-inspector-lite.example.com");
+  assert.equal(result.readyForLiveCutover, false);
+  assert.ok(result.blockers.includes("default_payment_link_domain_pending"));
 });
