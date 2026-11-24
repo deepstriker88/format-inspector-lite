@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        node: [18, 20, 22]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - run: npm test
+      - name: Audit package payload
+        run: npm pack --dry-run --json --ignore-scripts > /tmp/npm-pack.json
+      - name: Clean-install CLI smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          TGZ="$(npm pack --ignore-scripts --silent)"
+          TMP="$(mktemp -d)"
+          npm install --prefix "$TMP" --ignore-scripts --no-audit --no-fund "./$TGZ"
+          "$TMP/node_modules/.bin/format-inspector-lite" --help >/dev/null
+          rm -rf "$TMP" "$TGZ"
