@@ -133,6 +133,14 @@ try{
    assert.notEqual(await page.locator("#status").getAttribute("data-state"),"incomparable");
    assert.ok((await page.locator("#result").textContent()).length>2);
    if(width===390||width===1440)await page.screenshot({path:"qa-screenshots/"+route.slice(1)+"-"+width+"x"+height+".png",fullPage:true});
+   if(route==="/review"&&width===390){
+    await page.emulateMedia({colorScheme:"dark"});
+    assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).colorScheme),"dark");
+    const chooserPromise=page.waitForEvent("filechooser");await page.locator(".file-open").first().click();await chooserPromise;
+    assert.ok(await page.locator("#run").evaluate(e=>e.getBoundingClientRect().bottom<=innerHeight));
+    await page.screenshot({path:"qa-screenshots/review-dark.png",fullPage:true});
+    await page.emulateMedia({colorScheme:"light"});
+   }
    const input=page.locator("textarea").first();
    await input.fill("invalid fixture");
    assert.equal(await page.locator("#status").getAttribute("data-state"),"idle");

@@ -54,11 +54,13 @@ function display(r){
 }
 function setBusy(){
  $("run").disabled=pending>0;$("example").disabled=pending>0;
- for(const id of ids)$(id+"-file").disabled=pending>0;
+ for(const id of ids){$(id+"-file").disabled=pending>0;$(id+"-open").disabled=pending>0;}
 }
 for(const input of inputs){
  input.addEventListener("input",()=>{reset();fileStatus.textContent="";});
  const id=input.id,file=$(id+"-file");
+ $(id+"-open").addEventListener("click",()=>file.click());
+ input.addEventListener("keydown",event=>{if(!event.isComposing&&event.key==="Enter"&&(event.ctrlKey||event.metaKey)&&!$("run").disabled){event.preventDefault();$("run").click();}});
  file.addEventListener("change",async()=>{
   const chosen=file.files?.[0];file.value="";
   if(!chosen)return;
