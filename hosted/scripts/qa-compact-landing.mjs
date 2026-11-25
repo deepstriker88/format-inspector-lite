@@ -18,14 +18,17 @@ try{
   const external=[],posts=[],errors=[];
   await context.route("**/*",route=>{const req=route.request(),url=new URL(req.url());if(url.origin!==base){external.push(url.origin);return route.abort();}if(req.method()!=="GET")posts.push(req.method()+" "+url.pathname);return route.continue();});
   const page=await context.newPage();page.on("pageerror",e=>errors.push(String(e)));
-  await page.goto(base+"/");await page.locator("#sample-run").waitFor();await page.waitForFunction(()=>!document.getElementById("sample-run").disabled);
+  await page.goto(base+"/");await page.locator("#sample-run").waitFor({state:"attached"});await page.waitForFunction(()=>!document.getElementById("sample-run").disabled);
   const box=await page.evaluate(()=>({height:document.documentElement.scrollHeight,width:document.documentElement.scrollWidth,viewportHeight:innerHeight,viewportWidth:innerWidth,primaryBottom:document.getElementById("primary-try").getBoundingClientRect().bottom,reviewBottom:document.getElementById("primary-review").getBoundingClientRect().bottom,footerBottom:document.querySelector("footer").getBoundingClientRect().bottom,buttonHeight:document.getElementById("sample-run").getBoundingClientRect().height,inputSize:parseFloat(getComputedStyle(document.getElementById("sample-select")).fontSize)}));
   assert.equal(box.width,width,"horizontal overflow");
   assert.ok(box.primaryBottom<=height,"free action outside first viewport");
   assert.ok(box.reviewBottom<=height,"review action outside first viewport");
   if(width>=360)assert.ok(box.height<=height+1,"initial page requires vertical scroll: "+width+"x"+height+" height "+box.height);
-  assert.ok(box.buttonHeight>=44&&box.inputSize>=16,"readability/touch sizing");
+  console.log("initial layout",width,height,JSON.stringify(box));
   await page.screenshot({path:"qa-screenshots/landing-"+width+"x"+height+".png",fullPage:true});
+  if(!await page.locator("#sample-panel").evaluate(e=>e.open))await page.locator("#sample-panel summary").click();
+  const controls=await page.evaluate(()=>({buttonHeight:document.getElementById("sample-run").getBoundingClientRect().height,inputSize:parseFloat(getComputedStyle(document.getElementById("sample-select")).fontSize)}));
+  assert.ok(controls.buttonHeight>=44&&controls.inputSize>=16,"readability/touch sizing: "+JSON.stringify(controls));
   await page.locator("#sample-run").click();assert.equal(await page.locator("#sample-output").getAttribute("data-state"),"fail");assert.notEqual(await page.locator("#sample-output").textContent(),"Example could not be checked.");
   await page.locator("#sample-select").selectOption("good");await page.locator("#sample-run").click();assert.equal(await page.locator("#sample-output").getAttribute("data-state"),"pass");
   assert.equal(posts.length,0,"local demo transmitted data");assert.equal(external.length,0,"external dependency before plans");
@@ -38,7 +41,7 @@ try{
   assert.ok((await page.locator("#more").textContent()).includes("npm install"));
   await page.keyboard.press("Escape");
   assert.equal(errors.length,0,errors.join("\n"));
-  metrics.push({viewport:{width,height},...box,verticalScroll:Math.max(0,box.height-height),sample:"pass/fail verified",sandboxCheckout:"disabled",externalRequests:external.length,inputPosts:posts.length});
+  metrics.push({viewport:{width,height},...box,...controls,verticalScroll:Math.max(0,box.height-height),sample:"pass/fail verified",sandboxCheckout:"disabled",externalRequests:external.length,inputPosts:posts.length});
   await context.close();
  }
  await fs.writeFile("qa-screenshots/metrics.json",JSON.stringify(metrics,null,2)+"\n");
