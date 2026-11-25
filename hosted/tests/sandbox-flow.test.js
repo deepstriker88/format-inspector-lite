@@ -87,7 +87,7 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal(headers.headers.get("strict-transport-security"), "max-age=86400");
     assert.equal(headers.headers.get("x-content-type-options"), "nosniff");
     assert.match(headers.headers.get("content-security-policy"), /style-src[^;]*https:\/\/sandbox-cdn\.paddle\.com/);
-    for (const route of ["/", "/api", "/review", "/review/style.css", "/review/tool.js", "/review/index.js", "/review/strict-json.js", "/review/contract.js", "/review/csv.js", "/try", "/try/style.css", "/try/tool.js", "/try/core.js", "/try/strict-json.js", "/try/csv.js", "/app.js", "/robots.txt", "/sitemap.xml", "/terms", "/privacy", "/refund"]) {
+    for (const route of ["/", "/api", "/review", "/review/style.css", "/review/tool.js", "/review/index.js", "/review/strict-json.js", "/review/contract.js", "/review/csv.js", "/try", "/try/style.css", "/try/tool.js", "/try/core.js", "/try/strict-json.js", "/try/csv.js", "/try/convert.js", "/app.js", "/robots.txt", "/sitemap.xml", "/terms", "/privacy", "/refund"]) {
       const head = await fetch(base + route, { method: "HEAD" });
       assert.equal(head.status, 200, "HEAD should succeed for " + route);
       assert.ok(Number(head.headers.get("content-length")) > 0, "HEAD should expose content-length for " + route);

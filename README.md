@@ -132,3 +132,28 @@ Blank optional cells skip format/unique checks; uniqueness otherwise compares ex
 strings. UTF-8 CSV only, not TSV/XLSX. No network, account or database required.
 This does not verify data authenticity or guarantee successful downstream import.
 This source includes the feature. Check the npm registry for the published version before installation; a staging placeholder is not a usable release.
+
+
+## Local record conversion (review candidate, not yet published)
+
+The browser input selector offers CSV → JSON and JSON → CSV conversion without
+a new service or request. CSV values remain exact strings by default, including
+leading zeros, empty fields, Unicode and quoted multiline values. Optional JSON
+integer-column list (for example `["qty"]`) converts only canonical safe integer
+cells. Headers must be unique, nonblank and free of blocked prototype keys.
+
+For JSON → CSV, exact matching text columns are the default. An optional ordered
+field map such as `[["ID","/id"],["Team","/team/name"]]` selects nested fields by
+JSON Pointer; explicitly selected booleans and safe integer values can also be
+exported. Numeric JSON tokens must be canonical safe integers (including
+unselected numbers); decimal/exponent spellings and negative zero are refused
+rather than rounded. Null and nested values cannot be written as cells. CSV
+output is fully quoted with CRLF, and formula-like text prefixes are refused.
+This does not guarantee safe spreadsheet behavior: import columns as text,
+especially identifiers with leading zeros. The output contains the input data
+and must be reviewed before sharing; copy-summary excludes those values.
+
+Limits: UTF-8 text 64 KiB, 100 data rows, 32 columns, 4 KiB optional profile,
+256 KiB output. No automatic type guessing, upload, persistence or new runtime
+dependency. The published package/version and managed API behavior are unchanged
+until a separate release review.
