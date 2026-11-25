@@ -61,3 +61,13 @@ test('thrown auth or quota errors fail closed',async()=>{
  const r=await serve({consumeQuota:()=>{throw Error('storage unavailable');}})(make('{}'));
  assert.equal(r.status,503);assert.doesNotMatch(await r.text(),/storage unavailable/);
 });
+
+test('declared body length must be decimal and match received bytes',async()=>{
+ const body=JSON.stringify([{format:"date",value:"2024-02-29"}]);
+ for(const length of ['0x10','1e2','+12','',String(Buffer.byteLength(body)-1),String(Buffer.byteLength(body)+1)]){
+  const r=await serve()(new Request(url,{method:'POST',headers:{'content-type':'application/json','content-length':length},body}));
+  assert.equal(r.status,400,length);
+ }
+ const good=await serve()(new Request(url,{method:'POST',headers:{'content-type':'application/json','content-length':String(Buffer.byteLength(body))},body}));
+ assert.equal(good.status,200);
+});

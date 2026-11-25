@@ -103,3 +103,32 @@ CLI input decoding uses strict UTF-8. Invalid byte sequences cause input errors 
 CLI: `format-inspector-lite --detect --input values.json --format csv`, where `values.json` is an array of strings. `--jsonl` accepts one JSON string per line. No network calls, identity inference, security classification or domain ownership claims are made. An ambiguous result requires user interpretation.
 
 `explainResult(result,'ko')` provides Korean messages as an alternative to the default English messages. CSV output and compact table summaries support `--locale ko`.
+
+## Repeat CSV delivery checks (next-release candidate)
+
+Use one reusable JSON contract to check successive CSV exports locally, with exact
+header names and order, required values, exact-string uniqueness and optional syntax
+rules. No cell values or column names appear in the report: columns and example
+rows are numbered from 1 (excluding the header). The input files are never modified.
+
+Example `rules.json`:
+
+```json
+{"version":1,"columns":[{"name":"id","required":true,"unique":true},{"name":"email","required":true,"format":"email"}]}
+```
+
+```sh
+format-inspector-contract --profile rules.json --input current.csv
+format-inspector-contract --profile rules.json --input current.csv --previous previous.csv
+```
+
+The comparison reports changes in row counts, invalid rows, invalid-row rate
+(percentage points) and issue counts. It is an aggregate quality comparison, not
+record-by-record reconciliation. A mismatched header disables row comparisons.
+Exit 0 means the current file passes, 1 means the current file fails, and 2 means
+invalid or unreadable input. JSON reports only. Limits per file: 1 MiB, 10,000 data
+rows and 50 columns; profile: 16 KiB, version 1. Header-only inputs are rejected.
+Blank optional cells skip format/unique checks; uniqueness otherwise compares exact
+strings. UTF-8 CSV only, not TSV/XLSX. No network, account or database required.
+This does not verify data authenticity or guarantee successful downstream import.
+This source includes the feature. Check the npm registry for the published version before installation; a staging placeholder is not a usable release.

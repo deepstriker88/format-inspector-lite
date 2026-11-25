@@ -86,3 +86,13 @@ test("sha256 is stable and does not retain raw key", () => {
   assert.equal(digest.length, 64);
   assert.notEqual(digest, raw);
 });
+
+test("signature validation preserves exact non-UTF8 bytes and rejects malformed signature fields",()=>{
+ const raw=Buffer.from([0xff,0x00,0xc3,0xa9]),secret="fixture";
+ const now=1800000000000,ts=now/1000;
+ const sig=crypto.createHmac("sha256",secret).update(String(ts)+":").update(raw).digest("hex");
+ assert.equal(verifyPaddleSignature(raw,"ts="+ts+";h1="+sig,secret,30,now),true);
+ assert.equal(verifyPaddleSignature(raw.toString("utf8"),"ts="+ts+";h1="+sig,secret,30,now),false);
+ assert.equal(verifyPaddleSignature(raw,"ts="+ts+";ts="+ts+";h1="+sig,secret,30,now),false);
+ assert.equal(verifyPaddleSignature(raw,"ts="+ts+";h1="+sig+"zz",secret,30,now),false);
+});

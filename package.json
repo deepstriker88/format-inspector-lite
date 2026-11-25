@@ -23,6 +23,11 @@
       "types": "./src/detect.d.ts",
       "import": "./src/detect.js",
       "default": "./src/detect.js"
+    },
+    "./contract": {
+      "types": "./src/contract.d.ts",
+      "import": "./src/contract.js",
+      "default": "./src/contract.js"
     }
   },
   "files": [
@@ -41,7 +46,8 @@
   },
   "license": "MIT",
   "bin": {
-    "format-inspector-lite": "bin/cli.js"
+    "format-inspector-lite": "bin/cli.js",
+    "format-inspector-contract": "bin/contract.js"
   },
   "types": "./src/index.d.ts",
   "repository": {

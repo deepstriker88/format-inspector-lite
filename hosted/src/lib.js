@@ -29,15 +29,17 @@ export function verifyPaddleSignature(rawBody, header, secret, toleranceSeconds 
   }
   const ts = Number(parts.ts?.[0]);
   const signatures = parts.h1 ?? [];
-  if (!Number.isFinite(ts) || signatures.length === 0) return false;
+  if (!Number.isSafeInteger(ts) || parts.ts?.length!==1 || !/^[0-9]+$/.test(parts.ts[0]) || signatures.length === 0 || (typeof rawBody!=="string"&&!Buffer.isBuffer(rawBody))) return false;
   const age = Math.abs(Math.floor(now / 1000) - ts);
   if (age > toleranceSeconds) return false;
   const expected = crypto
     .createHmac("sha256", secret)
-    .update(`${ts}:${rawBody}`, "utf8")
+    .update(String(ts)+":", "utf8")
+    .update(rawBody)
     .digest("hex");
   return signatures.some((signature) => {
     try {
+      if(!/^[a-fA-F0-9]{64}$/.test(signature))return false;
       const a = Buffer.from(expected, "hex");
       const b = Buffer.from(signature, "hex");
       return a.length === b.length && crypto.timingSafeEqual(a, b);

@@ -2,27 +2,50 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Format Inspector Lite Cloud — free local package, optional hosted API</title>
-<meta name="description" content="Free MIT npm package for offline CSV/JSON/JSONL audits. Optional hosted API adds managed keys, quotas and Paddle plan management without changing the free core.">
+<meta name="description" content="Free MIT-licensed tool for offline CSV/JSON/JSONL audits. Optional hosted API adds managed keys, quotas and Paddle plan management without changing the free core.">
 <link rel="canonical" href="https://format-inspector.eztoolgo.duckdns.org/">
 <meta name="robots" content="index,follow">
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <style>
 :root{font-family:Inter,system-ui,sans-serif;color:#172033;background:#f7f9fc}*{box-sizing:border-box}body{margin:0}main{max-width:980px;margin:auto;padding:48px 20px 80px}a{color:#174ea6}h1{font-size:clamp(2.2rem,6vw,4rem);line-height:1.02;margin:.2em 0}.lead{font-size:1.18rem;max-width:760px;color:#4b5870}.tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#e8eefb;font-weight:700}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:28px 0}.card{background:white;border:1px solid #dfe5ef;border-radius:18px;padding:20px;box-shadow:0 8px 24px #18315310}.price{font-size:2rem;font-weight:800}.muted{color:#667085}.btn,button{border:0;border-radius:10px;padding:11px 15px;background:#152b55;color:white;font-weight:700;cursor:pointer}.btn.secondary,button.secondary{background:#eef2f7;color:#172033}button:disabled{opacity:.45;cursor:not-allowed}label{display:grid;gap:6px;margin:10px 0;font-weight:600}input,select,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:9px;font:inherit}pre{overflow:auto;background:#0f172a;color:#e2e8f0;padding:16px;border-radius:12px;font-size:.83rem}.status{padding:12px;border-radius:10px;background:#eef4ff;margin:12px 0}.legal{font-size:.88rem;color:#667085}.key{word-break:break-all;background:#ecfdf3;border:1px solid #a7f3d0;padding:12px;border-radius:10px}footer{border-top:1px solid #dfe5ef;margin-top:45px;padding-top:20px}.demo-result{min-height:48px}
+
+/* Original shared design direction; no brand assets or external fonts. */
+:root{font-family:system-ui,"Segoe UI",sans-serif;color:#202523;background:#f6f6f3;font-size:16px;line-height:1.55}
+main{max-width:1120px;padding:clamp(24px,5vw,64px) clamp(16px,4vw,48px) 56px}
+h1{font-size:clamp(2rem,5vw,3.25rem);font-weight:650;line-height:1.14;letter-spacing:-.035em;max-width:20ch}
+h2{font-size:1.25rem;letter-spacing:-.015em;font-weight:650}
+.lead{font-size:1.0625rem;color:#515b56;max-width:65ch}
+.tag{background:transparent;color:#176354;padding:0;font-size:.8125rem;letter-spacing:.06em}
+.grid{grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:16px;margin:32px 0}
+.card{min-width:0;border:1px solid #dce0db;border-radius:16px;box-shadow:none;padding:clamp(16px,3vw,28px)}
+.price{font-size:1.75rem;letter-spacing:-.025em;font-weight:650}
+a{color:#176354;text-underline-offset:4px}.btn,button{display:inline-block;min-height:44px;font:inherit;font-weight:650;background:#176354;color:#fff;border-radius:10px;text-decoration:none}
+.btn.secondary,button.secondary{color:#176354;background:transparent}
+input,select,textarea{font-size:16px;border-color:#858f88;color:#202523}
+input[type=checkbox]{width:auto;min-width:20px;min-height:20px;margin:4px 0;accent-color:#176354}
+label:has(input[type=checkbox]){display:block}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#252b28;color:#f5f6f4}
+.status{background:#eef2ed;color:#304039;overflow-wrap:anywhere}
+.legal,.muted{color:#515b56;font-size:.9375rem}
+code{overflow-wrap:anywhere}:focus-visible{outline:3px solid #176354;outline-offset:3px}
+summary{cursor:pointer;min-height:44px}footer{border-color:#dce0db}
 </style></head><body><main>
 <span class="tag">Free core + optional hosted API</span>
 <h1>Validate common text formats locally or through a managed API</h1>
-<p class="lead">Free MIT npm package for offline CSV/JSON/JSONL audits. Optional hosted API adds managed keys, quotas and Paddle plan management without changing the free core.</p>
-<p><a class="btn secondary" href="https://github.com/deepstriker88/format-inspector-lite">View free source on GitHub</a></p>
+<p class="lead">Free MIT-licensed tool for offline CSV/JSON/JSONL audits. Optional hosted API adds managed keys, quotas and Paddle plan management without changing the free core.</p>
+<p><a class="btn" href="/try" style="display:inline-block;min-height:44px;margin:0 8px 8px 0">Try free — no signup or upload</a> <a class="btn secondary" href="https://github.com/deepstriker88/format-inspector-lite">View free source on GitHub</a></p>
+
+<section class="card"><h2>Compare recurring CSV deliveries</h2><p>Validate the current delivery against a reusable column contract, and compare its quality with the previous delivery. Review counts and save a privacy-minimized report locally.</p><a class="btn secondary" href="/review">Open comparison workspace</a></section>
 
 <section class="grid">
-<div class="card"><h2>Free local</h2><div class="price">$0</div><p>MIT package · offline · zero runtime dependencies</p><code>npm install format-inspector-lite</code></div>
+<div class="card"><h2>Free local</h2><div class="price">$0</div><p>MIT package · offline · zero runtime dependencies</p><p>npm stable release pending. <a href="/try">Use the free browser tool now</a>.</p></div>
 <div class="card"><h2>Pro</h2><div class="price" id="pro-price">$2.99<small>/mo</small></div><p>25,000 hosted API calls/month</p><button class="buy" data-plan="pro" disabled>Choose Pro</button></div>
 <div class="card"><h2>Team</h2><div class="price" id="team-price">$6.99<small>/mo</small></div><p>250,000 hosted API calls/month</p><button class="buy" data-plan="team" disabled>Choose Team</button></div>
 </section>
 <div id="plan-status" class="status">Checking Paddle sandbox plan configuration…</div>
 <p class="legal">Subscriptions are recurring monthly. Paddle is Merchant of Record. Taxes and final totals are shown in the Paddle payment window. Live money remains disabled until separate live-payment approval.</p>
 
-<section class="card"><h2>Try the free hosted demo</h2><label>Format<select id="demo-format"><option>email</option><option>hostname</option><option>ipv4</option><option>ipv6</option><option>uuid</option><option>date</option><option>time</option><option>uri</option></select></label><label>Value<input id="demo-value" value="user@example.com"></label><button id="run-demo">Run demo</button><pre id="demo-result" class="demo-result">No request yet</pre><p class="legal">Syntax and format checks only. It does not verify mailbox existence, website availability, malware, or full schema validity.</p></section>
+<section class="card"><h2>Try the hosted API demo</h2><p class="legal">This separate API demo sends inputs to our server. Use synthetic examples only. For private data, <a href="/try">use the browser-only tool</a>.</p><label>Format<select id="demo-format"><option>email</option><option>hostname</option><option>ipv4</option><option>ipv6</option><option>uuid</option><option>date</option><option>time</option><option>uri</option></select></label><label>Value<input id="demo-value" value="user@example.com"></label><button id="run-demo">Run demo</button><pre id="demo-result" class="demo-result">No request yet</pre><p class="legal">Syntax and format checks only. It does not verify mailbox existence, website availability, malware, or full schema validity.</p></section>
 
 <section class="card"><h2>Hosted API example</h2><pre>curl -X POST https://format-inspector.eztoolgo.duckdns.org/v1/inspect \
   -H "Authorization: Bearer YOUR_API_KEY" \

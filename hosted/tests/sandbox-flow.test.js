@@ -79,16 +79,47 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
       await pause(100);
     }
     assert.ok(ready, "isolated server not ready: " + errors.slice(0, 300));
+    const oversizedHeader = await fetch(base + "/healthz", { headers: { "x-test-padding": "a".repeat(9000) } });
+    assert.equal(oversizedHeader.status, 431);
+    await oversizedHeader.arrayBuffer();
+
     const headers = await fetch(base + "/healthz");
     assert.equal(headers.headers.get("strict-transport-security"), "max-age=86400");
     assert.equal(headers.headers.get("x-content-type-options"), "nosniff");
     assert.match(headers.headers.get("content-security-policy"), /style-src[^;]*https:\/\/sandbox-cdn\.paddle\.com/);
-    for (const route of ["/", "/app.js", "/robots.txt", "/sitemap.xml", "/terms", "/privacy", "/refund"]) {
+    for (const route of ["/", "/review", "/review/style.css", "/review/tool.js", "/review/index.js", "/review/strict-json.js", "/review/contract.js", "/review/csv.js", "/try", "/try/style.css", "/try/tool.js", "/try/core.js", "/try/strict-json.js", "/try/csv.js", "/app.js", "/robots.txt", "/sitemap.xml", "/terms", "/privacy", "/refund"]) {
       const head = await fetch(base + route, { method: "HEAD" });
       assert.equal(head.status, 200, "HEAD should succeed for " + route);
       assert.ok(Number(head.headers.get("content-length")) > 0, "HEAD should expose content-length for " + route);
       assert.equal(await head.text(), "");
     }
+    const localPage = await fetch(base + "/try");
+    assert.match(localPage.headers.get("content-security-policy"), /connect-src 'none'/);
+    assert.match(localPage.headers.get("content-security-policy"), /form-action 'none'/);
+    assert.equal(localPage.headers.get("referrer-policy"), "no-referrer");
+    const localHtml = await localPage.text();
+    assert.doesNotMatch(localHtml, /paddle\.js|<form|https:\/\//i);
+    assert.match(localHtml, /\/try\/tool\.js/);
+    const localCore = await fetch(base + "/try/core.js");
+    assert.match(await localCore.text(), /export function /);
+    const module_strict_json = await fetch(base + "/try/strict-json.js");
+    assert.equal(module_strict_json.status,200);
+    assert.match(module_strict_json.headers.get("content-type"), /^application\/javascript/);
+    const module_csv = await fetch(base + "/try/csv.js");
+    assert.equal(module_csv.status,200);
+    assert.match(module_csv.headers.get("content-type"), /^application\/javascript/);
+    assert.equal((await fetch(base + "/try/contract.js")).status,404);
+    const review=await fetch(base+"/review");
+    assert.equal(review.status,200);
+    assert.match(review.headers.get("content-security-policy"),/connect-src 'none'/);
+    assert.match(review.headers.get("content-security-policy"),/form-action 'none'/);
+    assert.equal(review.headers.get("referrer-policy"),"no-referrer");
+    const reviewHtml=await review.text();
+    assert.match(reviewHtml,/\/review\/tool.js/);
+    assert.doesNotMatch(reviewHtml,/<form|paddle\.js|<script[^>]+src="https?:/i);
+    assert.equal((await fetch(base+"/review/unknown.js")).status,404);
+    const site=await fetch(base+"/sitemap.xml");
+    assert.match(await site.text(),/\/review<\/loc>/);
     const indexNow = await fetch(base + "/0123456789abcdef0123456789abcdef.txt");
     assert.equal(indexNow.status, 200);
     assert.equal(await indexNow.text(), "0123456789abcdef0123456789abcdef");
@@ -119,6 +150,12 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal((await request("/internal/test/activate", {plan:"team"})).status,404);
     assert.equal((await request("/billing/claim",{activationId,claimSecret:"invalid"})).status,401);
 
+    // Malformed body roots and invalid UTF-8 are client errors, not server failures.
+    for(const body of ["null","[]","123",Buffer.from([255])]){
+      const bad=await fetch(base+"/billing/activation",{method:"POST",headers:{"content-type":"application/json"},body});
+      assert.equal(bad.status,400);
+    }
+    assert.equal((await request("/healthz")).status,200);
     const invalidSig = await request("/billing/paddle", { event_id:"evt_invalid",event_type:"transaction.completed" });
     assert.equal(invalidSig.status, 401);
 
@@ -153,6 +190,10 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal(secondClaim.status, 410);
 
     const token = {authorization:"Bearer " + claimed.body.apiKey};
+    const malformed=await fetch(base+"/v1/inspect",{method:"POST",headers:{"content-type":"application/json",...token},body:"{"});
+    assert.equal(malformed.status,400);
+    assert.equal((await request("/v1/usage",undefined,token)).body.used,0);
+
     const inspected = await request("/v1/inspect", {format:"email",value:"user@example.com"}, token);
     assert.equal(inspected.status, 200);
     assert.equal(inspected.body.valid, true);

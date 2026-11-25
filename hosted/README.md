@@ -39,3 +39,33 @@ PADDLE_API_KEY=... node scripts/bootstrap-paddle-sandbox.js
 npm test
 docker compose up -d --build
 ```
+
+### Database and billing-environment boundary
+
+A database is bound to one product and billing environment. New empty databases
+are bound automatically. Existing unmarked databases are accepted only after a
+verified sandbox adoption with ADOPT_LEGACY_SANDBOX_DB=1. The guard rejects
+nonmatching stored key prefixes. This is not historical payment provenance:
+check prior configuration and verify a backup before adopting; remove the flag
+after successful migration. Live billing requires separate explicit DB_PATH
+(not the sandbox default), a new database/volume, correct Paddle credentials,
+and owner approval. Existing sandbox data must not be copied into a live database.
+The current compose config still targets sandbox /data/commerce.sqlite; do not
+enable live by changing one flag.
+
+Use scripts/backup.js to create a consistent SQLite snapshot including committed
+WAL records, with mode 0600 and no overwrite. Test restoration separately. This
+does not replace encrypted off-host retention, verified operator access, or
+provider reconciliation after a real-money incident. A rollback to an older
+application would not enforce the new marker; restrict rollback to the same
+verified sandbox environment.
+
+Hosted requests verify raw webhook bytes. Malformed JSON does not consume the
+monthly validation quota; an intentionally checked invalid value does. Request
+authorization is rechecked after body parsing. Single service replica only:
+local rate-limit counters are not distributed.
+
+References:
+https://developer.paddle.com/webhooks/about/signature-verification/
+https://developer.paddle.com/build/go-live-checklist/
+https://www.sqlite.org/lang_vacuum.html
