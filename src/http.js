@@ -11,11 +11,12 @@ const reply=(status,data,extra={})=>new Response(JSON.stringify(data),{status,he
 async function boundedBody(request,maxBytes){
  const header=request.headers.get('content-length');
  if(header!==null){
+  if(!/^\d+$/.test(header))throw new TypeError('invalid content length');
   const declared=Number(header);
   if(!Number.isSafeInteger(declared)||declared<0)throw new TypeError('invalid content length');
   if(declared>maxBytes)throw new RangeError('payload too large');
  }
- if(!request.body)return '';
+ if(!request.body){if(header!==null&&Number(header)!==0)throw new TypeError('content length mismatch');return '';}
  const reader=request.body.getReader();
  let size=0;const chunks=[];
  try{
@@ -29,6 +30,7 @@ async function boundedBody(request,maxBytes){
   }
  }catch(error){try{await reader.cancel();}catch{}throw error;}
  finally{reader.releaseLock();}
+ if(header!==null&&Number(header)!==size)throw new TypeError('content length mismatch');
  const payload=new Uint8Array(size);
  let offset=0;for(const chunk of chunks){payload.set(chunk,offset);offset+=chunk.length;}
  return new TextDecoder('utf-8',{fatal:true}).decode(payload);

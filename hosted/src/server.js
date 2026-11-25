@@ -668,6 +668,27 @@ const server = http.createServer(async (req, res) => {
     if (isStaticRead && route === "/sitemap.xml") {
       return serveStatic(res, "sitemap.xml", "application/xml; charset=utf-8", headOnly);
     }
+    if (isStaticRead && route === "/review") {
+      res.setHeader("content-security-policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'");
+      res.setHeader("referrer-policy", "no-referrer");
+      return serveStatic(res, "review.html", undefined, headOnly);
+    }
+    if (isStaticRead && route === "/review/style.css") return serveStatic(res, "review.css", "text/css; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/review/tool.js") return serveStatic(res, "review.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/review/index.js") return serveStatic(res, "../../src/index.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/review/strict-json.js") return serveStatic(res, "../../src/strict-json.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/review/contract.js") return serveStatic(res, "../../src/contract.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/review/csv.js") return serveStatic(res, "../../src/csv.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/try") {
+      res.setHeader("content-security-policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'");
+      res.setHeader("referrer-policy", "no-referrer");
+      return serveStatic(res, "try.html", undefined, headOnly);
+    }
+    if (isStaticRead && route === "/try/style.css") return serveStatic(res, "try.css", "text/css; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/try/tool.js") return serveStatic(res, "try.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/try/core.js") return serveStatic(res, "../../src/index.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/try/strict-json.js") return serveStatic(res, "../../src/strict-json.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/try/csv.js") return serveStatic(res, "../../src/csv.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/app.js") {
       return serveStatic(res, "app.js", "application/javascript; charset=utf-8", headOnly);
     }
