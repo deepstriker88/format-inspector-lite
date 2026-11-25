@@ -23,7 +23,7 @@ try{
   assert.equal(box.width,width,"horizontal overflow");
   assert.ok(box.primaryBottom<=height,"free action outside first viewport");
   assert.ok(box.reviewBottom<=height,"review action outside first viewport");
-  if(width>=360)assert.ok(box.height<=height+1,"initial page requires vertical scroll: "+width+"x"+height+" height "+box.height);
+  assert.ok(box.height<=height+1,"initial page requires vertical scroll: "+width+"x"+height+" height "+box.height);
   console.log("initial layout",width,height,JSON.stringify(box));
   await page.screenshot({path:"qa-screenshots/landing-"+width+"x"+height+".png",fullPage:true});
   if(!await page.locator("#sample-panel").evaluate(e=>e.open))await page.locator("#sample-panel summary").click();

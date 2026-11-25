@@ -81,5 +81,3 @@ document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",(
  if(b.dataset.open==="plans")loadConfig();
 }));
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
-
-readConfig().then(c=>{$("price-note").textContent="Free $0 · API from $"+c.pricing.pro.usdMonthly.toFixed(2)+"/mo (preview)"}).catch(()=>{$("price-note").textContent="Free $0 · paid prices unavailable"});
