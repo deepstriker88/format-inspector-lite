@@ -40,6 +40,30 @@ try{
   await page.locator('[data-open="more"]').click();assert.equal(await page.locator("#more").evaluate(e=>e.open),true);
   assert.ok((await page.locator("#more").textContent()).includes("npm install"));
   await page.keyboard.press("Escape");
+  // The actual task views, not only the promotional first screen.
+  for (const route of ["/try","/review"]) {
+   await page.goto(base+route);
+   await page.waitForFunction(()=>!document.getElementById("run").disabled);
+   const layout=await page.evaluate(()=>({
+    width:document.documentElement.scrollWidth,
+    primaryHeight:document.getElementById("run").getBoundingClientRect().height,
+    bodyFont:parseFloat(getComputedStyle(document.body).fontSize),
+    inputFont:parseFloat(getComputedStyle(document.querySelector("textarea")).fontSize)
+   }));
+   assert.ok(layout.width<=width,"private view overflow "+route+" "+JSON.stringify(layout));
+   assert.ok(layout.primaryHeight>=44&&layout.bodyFont>=16&&layout.inputFont>=16,"private tool readability");
+   await page.locator("#example").click();
+   await page.locator("#run").click();
+   assert.notEqual(await page.locator("#status").getAttribute("data-state"),"idle");
+   assert.notEqual(await page.locator("#status").getAttribute("data-state"),"incomparable");
+   assert.ok((await page.locator("#result").textContent()).length>2);
+   if(width===390||width===1440)await page.screenshot({path:"qa-screenshots/"+route.slice(1)+"-"+width+"x"+height+".png",fullPage:true});
+   const input=page.locator("textarea").first();
+   await input.fill("invalid fixture");
+   assert.equal(await page.locator("#status").getAttribute("data-state"),"idle");
+   assert.equal(posts.length,0,"private tool transmitted input");
+   assert.equal(external.length,0,"private tool made external request");
+  }
   assert.equal(errors.length,0,errors.join("\n"));
   metrics.push({viewport:{width,height},...box,...controls,verticalScroll:Math.max(0,box.height-height),sample:"pass/fail verified",sandboxCheckout:"disabled",externalRequests:external.length,inputPosts:posts.length});
   await context.close();
