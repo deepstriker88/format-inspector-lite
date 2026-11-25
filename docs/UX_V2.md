@@ -4,3 +4,5 @@ Removed redundant comparison/marketing blocks from first screen; original compar
 One primary action, no cropped controls, explicit secondary review link, shorter headings and consistent navigation.
 System fonts only; no new assets or runtime dependencies; payment implementation and actual validation logic unchanged.
 First-screen layout and private tool behavior must be verified in browser CI. No production change.
+
+One-click local example and automatic result reveal only when the result lies outside the visible viewport; confirmation and stale-result protections retained.

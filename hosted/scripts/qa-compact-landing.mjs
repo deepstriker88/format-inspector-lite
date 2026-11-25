@@ -53,13 +53,15 @@ try{
    assert.ok(layout.width<=width,"private view overflow "+route+" "+JSON.stringify(layout));
    assert.ok(layout.primaryHeight>=44&&layout.bodyFont>=16&&layout.inputFont>=16,"private tool readability");
    await page.locator("#example").click();
-   await page.locator("#run").click();
    assert.notEqual(await page.locator("#status").getAttribute("data-state"),"idle");
    assert.notEqual(await page.locator("#status").getAttribute("data-state"),"incomparable");
    assert.ok((await page.locator("#result").textContent()).length>2);
    if(width===390||width===1440)await page.screenshot({path:"qa-screenshots/"+route.slice(1)+"-"+width+"x"+height+".png",fullPage:true});
    const input=page.locator("textarea").first();
    await input.fill("invalid fixture");
+   assert.equal(await page.locator("#status").getAttribute("data-state"),"idle");
+   page.once("dialog",d=>d.dismiss());await page.locator("#example").click();
+   assert.equal(await input.inputValue(),"invalid fixture");
    assert.equal(await page.locator("#status").getAttribute("data-state"),"idle");
    assert.equal(posts.length,0,"private tool transmitted input");
    assert.equal(external.length,0,"private tool made external request");

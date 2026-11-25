@@ -28,7 +28,7 @@ const status=$("status"),summary=$("summary"),findings=$("findings"),technical=$
 function reset(){
  report=null;revision++;
  status.dataset.state="idle";status.textContent="Ready to compare locally";
- summary.textContent="Load an example or supply three inputs.";
+ summary.textContent="Try an example or supply three inputs.";
  findings.replaceChildren();result.textContent="";technical.hidden=true;technical.open=false;$("download").disabled=true;
 }
 function metric(label,value){
@@ -75,16 +75,23 @@ for(const input of inputs){
   finally{pending--;setBusy();}
  });
 }
+function revealResult(){
+ const rect=status.getBoundingClientRect();
+ if(rect.top<0||rect.bottom>window.innerHeight){
+  status.scrollIntoView({block:"nearest",behavior:"instant"});
+ }
+}
 $("run").addEventListener("click",()=>{
  if(pending)return;
  reset();fileStatus.textContent="";
  try{display(check(Object.fromEntries(inputs.map(i=>[i.id,i.value]))));}
  catch{status.dataset.state="incomparable";status.textContent="Comparison unavailable";summary.textContent="Check all inputs, supported rules, file size and syntax. No report was produced.";}
+ revealResult();
 });
 $("example").addEventListener("click",()=>{
  if(pending)return;
  if(inputs.some(i=>i.value)&&!window.confirm("Replace current inputs with the example?"))return;
- for(const input of inputs)input.value=sample[input.id];reset();fileStatus.textContent="";
+ for(const input of inputs)input.value=sample[input.id];$("run").click();
 });
 $("clear").addEventListener("click",()=>{
  for(const input of inputs)input.value="";
