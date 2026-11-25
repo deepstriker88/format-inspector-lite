@@ -709,6 +709,7 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
     if (isStaticRead && route === "/try/core.js") return serveStatic(res, "../../src/index.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/try/strict-json.js") return serveStatic(res, "../../src/strict-json.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/try/csv.js") return serveStatic(res, "../../src/csv.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/landing-example.js") return serveStatic(res, "landing-example.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/app.js") {
       return serveStatic(res, "app.js", "application/javascript; charset=utf-8", headOnly);
     }
