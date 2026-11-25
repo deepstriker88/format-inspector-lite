@@ -7,3 +7,5 @@
 **/*.sqlite*
 **/*.tgz
 **/backups
+**/*.pem
+**/*.key

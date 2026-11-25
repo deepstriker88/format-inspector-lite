@@ -79,6 +79,10 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
       await pause(100);
     }
     assert.ok(ready, "isolated server not ready: " + errors.slice(0, 300));
+    const oversizedHeader = await fetch(base + "/healthz", { headers: { "x-test-padding": "a".repeat(9000) } });
+    assert.equal(oversizedHeader.status, 431);
+    await oversizedHeader.arrayBuffer();
+
     const headers = await fetch(base + "/healthz");
     assert.equal(headers.headers.get("strict-transport-security"), "max-age=86400");
     assert.equal(headers.headers.get("x-content-type-options"), "nosniff");
@@ -146,6 +150,12 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal((await request("/internal/test/activate", {plan:"team"})).status,404);
     assert.equal((await request("/billing/claim",{activationId,claimSecret:"invalid"})).status,401);
 
+    // Malformed body roots and invalid UTF-8 are client errors, not server failures.
+    for(const body of ["null","[]","123",Buffer.from([255])]){
+      const bad=await fetch(base+"/billing/activation",{method:"POST",headers:{"content-type":"application/json"},body});
+      assert.equal(bad.status,400);
+    }
+    assert.equal((await request("/healthz")).status,200);
     const invalidSig = await request("/billing/paddle", { event_id:"evt_invalid",event_type:"transaction.completed" });
     assert.equal(invalidSig.status, 401);
 
