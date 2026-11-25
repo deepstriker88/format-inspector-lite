@@ -5,11 +5,18 @@ function showPrice(id,value){const small=document.createElement("small");small.t
 async function loadConfig(){
  checkoutReady=false;document.querySelectorAll(".buy").forEach(b=>b.disabled=true);
  try{
-  const r=await fetch("/config.json",{cache:"no-store"}); cfg=await r.json();
+  const r=await fetch("/config.json",{cache:"no-store"}); if(!r.ok)throw new Error("config unavailable"); cfg=await r.json();
   showPrice("pro-price","$"+Number(cfg.pricing.pro.usdMonthly).toFixed(2));
   showPrice("team-price","$"+Number(cfg.pricing.team.usdMonthly).toFixed(2));
-  if(!cfg.billingReady||!window.Paddle){$("plan-status").textContent="Pricing preview only. Paddle sandbox catalog is not connected yet; no payment can be made.";return}
-  if(cfg.paddleEnvironment==="sandbox") Paddle.Environment.set("sandbox");
+  const limits=cfg.pricing;
+  $("pro-limit").textContent=Number(limits.pro.monthlyRequests).toLocaleString();
+  $("team-limit").textContent=Number(limits.team.monthlyRequests).toLocaleString();
+  $("checkout-fields").hidden=true;
+  if(cfg.paddleEnvironment!=="live"||!cfg.billingReady){$("plan-status").textContent="Preview pricing only. Live checkout is unavailable; no real payment can be made.";return}
+  if(!window.Paddle){
+   await new Promise((resolve,reject)=>{const script=document.createElement("script");script.src="https://cdn.paddle.com/paddle/v2/paddle.js";script.onload=resolve;script.onerror=reject;document.head.append(script);});
+  }
+  if(!window.Paddle)throw new Error("provider unavailable");
   Paddle.Initialize({token:cfg.paddleClientToken,eventCallback:e=>{if(e?.name==="checkout.completed"&&activeClaim) pollClaim()}});
   try{
    const preview=await Paddle.PricePreview({items:[{priceId:cfg.proPriceId,quantity:1},{priceId:cfg.teamPriceId,quantity:1}]});
@@ -18,7 +25,7 @@ async function loadConfig(){
    if(!prices.get(cfg.proPriceId)||!prices.get(cfg.teamPriceId))throw new Error("missing price");
    showPrice("pro-price",prices.get(cfg.proPriceId));showPrice("team-price",prices.get(cfg.teamPriceId));
   }catch{$("plan-status").textContent="Provider price verification failed; checkout paused.";return}
-  checkoutReady=true;
+  checkoutReady=true; $("checkout-fields").hidden=false;
   document.querySelectorAll(".buy").forEach(b=>b.disabled=Boolean(activeClaim));
   $("plan-status").textContent=(cfg.paddleEnvironment==="sandbox"?"Sandbox payment flow ready — test payments only":"Live payment flow configured");
  }catch(e){$("plan-status").textContent="Billing configuration unavailable"}
@@ -56,5 +63,9 @@ async function pollClaim(){
 $("run-demo").addEventListener("click",async()=>{
  try{const body={format:document.getElementById("demo-format").value,value:document.getElementById("demo-value").value};const r=await fetch("/demo/inspect",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});$("demo-result").textContent=JSON.stringify(await r.json(),null,2)}catch(e){$("demo-result").textContent="Input error: "+e.message}
 });
-try{activeClaim=JSON.parse(sessionStorage.getItem("fil-active-claim")||"null");if(activeClaim)pollClaim()}catch{}
-loadConfig();
+try{activeClaim=JSON.parse(sessionStorage.getItem("fil-active-claim")||"null");if(activeClaim){$("plans").showModal();pollClaim()}}catch{}
+document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>{
+ const dialog=$(b.dataset.open);if(!dialog.open)dialog.showModal();
+ if(b.dataset.open==="plans")loadConfig();
+}));
+document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
