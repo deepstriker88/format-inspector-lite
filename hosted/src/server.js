@@ -1,3 +1,4 @@
+import {bindBillingContext} from "./billing-context.js";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -18,16 +19,24 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.resolve(__dirname, "../public");
 
+// Separate public client token environments; disable all payment credentials on mismatch.
+const requestedMode=process.env.PADDLE_ENV||"sandbox";
+const requestedToken=process.env.PADDLE_CLIENT_TOKEN||"";
+const modeAllowed=requestedMode==="sandbox"||
+  (requestedMode==="live"&&process.env.ENABLE_LIVE_BILLING==="1");
+const billingMode=requestedMode==="live"&&modeAllowed?"live":"sandbox";
+const billingCredentialsAllowed=modeAllowed&&requestedToken.startsWith(billingMode==="live"?"live_":"test_");
+
 const config = Object.freeze({
   host: process.env.HOST || "0.0.0.0",
   port: Number(process.env.PORT || 8787),
   dbPath: process.env.DB_PATH || "/data/commerce.sqlite",
   baseUrl: process.env.BASE_URL || "http://localhost:8787",
-  paddleEnv: process.env.PADDLE_ENV === "live" && process.env.ENABLE_LIVE_BILLING === "1" ? "live" : "sandbox",
-  paddleClientToken: process.env.PADDLE_CLIENT_TOKEN || "",
-  paddleWebhookSecret: process.env.PADDLE_WEBHOOK_SECRET || "",
-  proPriceId: process.env.PADDLE_PRICE_PRO || "",
-  teamPriceId: process.env.PADDLE_PRICE_TEAM || "",
+  paddleEnv: billingMode,
+  paddleClientToken: billingCredentialsAllowed ? (process.env.PADDLE_CLIENT_TOKEN || "") : "",
+  paddleWebhookSecret: billingCredentialsAllowed ? (process.env.PADDLE_WEBHOOK_SECRET || "") : "",
+  proPriceId: billingCredentialsAllowed ? (process.env.PADDLE_PRICE_PRO || "") : "",
+  teamPriceId: billingCredentialsAllowed ? (process.env.PADDLE_PRICE_TEAM || "") : "",
   proMonthlyUsd: Number(process.env.PRO_MONTHLY_USD || 2.99),
   teamMonthlyUsd: Number(process.env.TEAM_MONTHLY_USD || 6.99),
   proMonthlyLimit: Number(process.env.PRO_MONTHLY_LIMIT || PLAN_LIMITS.pro),
@@ -45,8 +54,13 @@ const planLimits = Object.freeze({
 });
 
 fs.mkdirSync(path.dirname(config.dbPath), { recursive: true });
+if(config.paddleEnv==="live"&&(!process.env.DB_PATH||path.resolve(config.dbPath)==="/data/commerce.sqlite"))
+  throw new Error("live billing requires a separately configured database path");
 const db = new DatabaseSync(config.dbPath);
-db.exec("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;");
+db.exec("PRAGMA busy_timeout=5000");
+try{bindBillingContext(db,{product:"fil",mode:config.paddleEnv,adoptLegacySandbox:process.env.ADOPT_LEGACY_SANDBOX_DB==="1"});}
+catch(error){db.close();throw error;}
+db.exec("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;");
 db.exec(`
 CREATE TABLE IF NOT EXISTS activations (
   id TEXT PRIMARY KEY,
@@ -166,19 +180,19 @@ async function readBody(req, maxBytes = 64 * 1024) {
     }
     chunks.push(chunk);
   }
-  return Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks);
 }
 
-async function readJson(req, maxBytes) {
-  const raw = await readBody(req, maxBytes);
+function parseJsonObject(raw) {
   try {
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    const error = new Error("invalid json");
-    error.code = "INVALID_JSON";
-    throw error;
+    const value=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(raw));
+    if(value===null||typeof value!=="object"||Array.isArray(value))throw new TypeError("object required");
+    return value;
+  }catch {
+    const error=new Error("invalid json");error.code="INVALID_JSON";throw error;
   }
 }
+async function readJson(req,maxBytes){return parseJsonObject(await readBody(req,maxBytes));}
 
 function clientIp(req) {
   // The first X-Forwarded-For entry is client-controlled; the rightmost
@@ -230,7 +244,7 @@ function apiKeyFromRequest(req) {
 }
 
 function findApiKey(rawKey) {
-  if (!rawKey) return null;
+  if (!rawKey || !rawKey.startsWith(config.paddleEnv==="live"?"fil_live_":"fil_test_") || !/^[A-Za-z0-9_-]{1,128}$/.test(rawKey)) return null;
   return db.prepare(`
     SELECT id, email, plan, status, key_prefix, paddle_subscription_id
       FROM api_keys
@@ -391,10 +405,11 @@ function cors(res) {
   res.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
 }
 
-const server = http.createServer(async (req, res) => {
+const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,requestTimeout:30000,keepAliveTimeout:5000,connectionsCheckingInterval:1000},async (req,res) => {
   securityHeaders(res);
-  const requestUrl = new URL(req.url, config.baseUrl);
-  const route = requestUrl.pathname;
+  let route;
+  try {route=new URL(req.url,config.baseUrl).pathname;}
+  catch{return json(res,400,{error:"invalid_request_target"});}
 
   if (req.method === "OPTIONS") {
     cors(res);
@@ -457,6 +472,7 @@ const server = http.createServer(async (req, res) => {
         return json(res, 429, { error: "rate_limit_reached", retryAfterSeconds: 60 });
       }
       const day = utcDay();
+      const body = await readJson(req, 16 * 1024);
       const usage = db.prepare(
         "SELECT count FROM demo_usage WHERE ip_hash=? AND day=?"
       ).get(ipHash, day);
@@ -466,7 +482,6 @@ const server = http.createServer(async (req, res) => {
           dailyLimit: config.demoDailyLimit,
         });
       }
-      const body = await readJson(req, 16 * 1024);
       const result = inspectFormat(body.format, body.value);
       db.prepare(`
         INSERT INTO demo_usage(ip_hash, day, count) VALUES(?,?,1)
@@ -478,7 +493,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && route === "/v1/inspect") {
       cors(res);
       const rawKey = apiKeyFromRequest(req);
-      const key = findApiKey(rawKey);
+      let key = findApiKey(rawKey);
       if (!key) return json(res, 401, { error: "invalid_api_key" });
       if (key.status !== "active") {
         return json(res, 403, { error: "api_key_inactive", status: key.status });
@@ -486,6 +501,13 @@ const server = http.createServer(async (req, res) => {
       if (!allowRateLimit("paid", key.id, 600)) {
         return json(res, 429, { error: "rate_limit_reached", retryAfterSeconds: 60 });
       }
+      const body = await readJson(req, 16 * 1024);
+      // A slow body can span a subscription change. Recheck after the await;
+      // malformed requests do not consume the paid quota.
+      key = findApiKey(rawKey);
+      if (!key) return json(res,401,{error:"invalid_api_key"});
+      if (key.status !== "active") return json(res,403,{error:"api_key_inactive",status:key.status});
+      const result = inspectFormat(body.format, body.value);
       const limit = planLimits[key.plan];
       if (!limit) return json(res, 403, { error: "unknown_plan" });
       const meter = recordUsage(key.id, limit);
@@ -497,8 +519,6 @@ const server = http.createServer(async (req, res) => {
           limit: meter.limit,
         });
       }
-      const body = await readJson(req, 16 * 1024);
-      const result = inspectFormat(body.format, body.value);
       return json(res, 200, {
         ...result,
         usage: { period: meter.period, used: meter.count, limit: meter.limit },
@@ -602,7 +622,7 @@ const server = http.createServer(async (req, res) => {
       )) {
         return json(res, 401, { error: "invalid_webhook_signature" });
       }
-      const event = JSON.parse(rawBody);
+      const event = parseJsonObject(rawBody);
       const eventId = String(event.event_id || event.id || "");
       const eventType = String(event.event_type || "");
       if (!eventId || !eventType) {
@@ -701,7 +721,7 @@ const server = http.createServer(async (req, res) => {
   } catch (error) {
     const status = error?.code === "BODY_TOO_LARGE" ? 413 :
       error?.code === "INVALID_JSON" ? 400 : 500;
-    console.error("request_error", route, error?.message || error);
+    if(status===500)console.error("request_error","internal_error");
     return json(res, status, {
       error: status === 500 ? "internal_error" : error.code.toLowerCase(),
     });

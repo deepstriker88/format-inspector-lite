@@ -180,6 +180,10 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal(secondClaim.status, 410);
 
     const token = {authorization:"Bearer " + claimed.body.apiKey};
+    const malformed=await fetch(base+"/v1/inspect",{method:"POST",headers:{"content-type":"application/json",...token},body:"{"});
+    assert.equal(malformed.status,400);
+    assert.equal((await request("/v1/usage",undefined,token)).body.used,0);
+
     const inspected = await request("/v1/inspect", {format:"email",value:"user@example.com"}, token);
     assert.equal(inspected.status, 200);
     assert.equal(inspected.body.valid, true);
