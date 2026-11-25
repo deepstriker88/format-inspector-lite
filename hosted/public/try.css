@@ -67,3 +67,34 @@ input[type=file]::file-selector-button{min-height:44px;border:1px solid var(--co
 #findings h3{margin:16px 0 4px}#findings ul{padding-left:20px}#findings li{overflow-wrap:anywhere;margin:6px 0}
 .cli-panel pre{max-height:none}
 @media(max-width:760px){main{width:calc(100% - 32px)}header{margin:12px 0}h1{font-size:26px}.workspace{grid-template-columns:minmax(0,1fr);gap:12px}.panel{padding:12px 16px}}
+
+/* Direct task entry: all input is local; plans are a separate document. */
+.quick{max-width:1040px}
+.quick nav{justify-content:space-between;gap:4px 12px}
+.quick .product-name{color:var(--ink);font-size:15px;font-weight:700;white-space:normal}
+.quick .nav-actions{display:flex;gap:8px 16px;flex-wrap:wrap}
+.quick .nav-actions a{font-size:14px}
+.quick header{margin:20px 0 12px;gap:4px}
+.quick header h1{font-size:clamp(26px,3.2vw,38px)}
+.quick .input-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+.quick .input-grid>div{min-width:0}
+.quick .input-grid label{margin-top:0}
+.quick .panel>label:first-child{margin-top:0}
+.quick textarea{min-height:72px}
+.quick .actions{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;margin-top:12px}
+.quick .actions button{padding:10px 12px}
+.quick #run{min-width:0}
+.quick .tool-info{margin-top:12px;font-size:14px;color:var(--muted)}
+.quick .tool-info summary{font-size:14px;font-weight:600}
+.quick .tool-info p{margin:4px 0 8px}
+.quick .tool-links{display:flex;gap:8px 16px;flex-wrap:wrap}
+.quick .tool-links a{display:inline-flex;align-items:center;min-height:44px}
+.quick .private-label{font-size:14px;color:var(--muted);margin-top:8px}
+.quick .result-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.quick .result-actions button{background:var(--surface);color:var(--accent);border-color:var(--control)}
+.quick .result-actions button:disabled{color:#697280;border-color:var(--line)}
+.quick .copy-feedback{font-size:14px;color:var(--muted);min-height:0}
+.quick .input-note{font-size:14px;color:var(--muted);margin:4px 0 0}
+@media(min-width:761px){.quick .workspace{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}}
+@media(max-width:760px){.quick nav{min-height:44px}.quick header{margin:12px 0 8px}.quick .panel{padding:12px}.quick .private-label{margin-top:6px}.quick .actions{gap:6px}.quick .actions button{font-size:14px;padding:10px 8px}.quick .tool-info{margin-top:6px}}
+@media(max-width:400px){.quick nav{gap:0}.quick .nav-actions{gap:12px}.quick .nav-actions a{font-size:13px}.quick .product-name{font-size:14px}.quick header{margin:8px 0}.quick header p{font-size:15px}.quick .panel label{margin-top:8px}.quick .input-grid label{margin-top:0}.quick textarea{min-height:64px;padding:8px 10px}.quick .tool-info{margin-top:4px}.quick .private-label{font-size:13px}}

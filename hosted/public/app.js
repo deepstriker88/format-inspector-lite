@@ -81,3 +81,5 @@ document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",(
  if(b.dataset.open==="plans")loadConfig();
 }));
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
+
+if (window.location?.hash === "#plans") {const dialog=$("plans");if(!dialog.open)dialog.showModal();loadConfig();}

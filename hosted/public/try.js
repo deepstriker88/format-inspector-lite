@@ -12,8 +12,17 @@ export function check({value,schema,mode,format}){
 }
 if(typeof document!=='undefined'){
 const $=id=>document.getElementById(id);
+const resultPanel=$("result-panel"), copyButton=$("copy-result"), copyFeedback=$("copy-feedback");
+let safeCopy="";
+function clearCopy(){safeCopy="";copyButton.disabled=true;copyFeedback.textContent="";resultPanel.hidden=true;}
+function setCopy(text){safeCopy=text;copyFeedback.textContent="";copyButton.disabled=!text;resultPanel.hidden=false;}
+copyButton.addEventListener("click",async()=>{
+ const captured=safeCopy;if(!captured)return;
+ try{await navigator.clipboard.writeText(captured);if(safeCopy===captured)copyFeedback.textContent="Copied.";}
+ catch{if(safeCopy===captured)copyFeedback.textContent="Clipboard unavailable. Select the result text to copy manually.";}
+});
 const value=$('value'),status=$('status'),result=$('result'),summary=$('summary'),technical=$('technical');
-const reset=()=>{status.textContent='Ready to check locally';status.dataset.state='idle';summary.textContent='Run a check to see the result.';result.textContent='';technical.open=false;technical.hidden=true;};
+const reset=()=>{clearCopy();status.textContent='Ready to check locally';status.dataset.state='idle';summary.textContent='Run a check to see the result.';result.textContent='';technical.open=false;technical.hidden=true;};
 const mode=$('mode'),format=$('format');
 const example=()=>{if(mode.value==='single'){format.value='email';value.value='user@example.com';}else if(mode.value==='csv'){value.value='format,value\nemail,user@example.com\nipv4,999.1.2.3';}else{value.value=JSON.stringify([{format:'email',value:'user@example.com'},{format:'ipv4',value:'999.1.2.3'}],null,2);}};
 const options=()=>({mode:mode.value,format:format.value,value:value.value});
@@ -41,6 +50,7 @@ function render(r){
     if(failures>10){const note=document.createElement('p');note.textContent='More issues in the technical result.';summary.append(note);}
   }
   result.textContent=JSON.stringify(r,null,2);technical.hidden=false;technical.open=false;
+  setCopy(status.textContent+"\n"+(list?passed+" of "+list.length+" records passed.":failures?failures+" reported validation issue(s).":"Supported checks completed."));
 }
 function revealResult(){
  const rect=status.getBoundingClientRect();
@@ -48,11 +58,12 @@ function revealResult(){
   status.scrollIntoView({block:"nearest",behavior:"instant"});
  }
 }
-$('run').addEventListener('click',()=>{try{render(check(options()));}catch{reset();status.textContent='Input could not be checked';status.dataset.state='fail';summary.textContent='Check JSON or CSV syntax, duplicate keys, record count and input limits. No validation result was produced.';} revealResult();});
+$('run').addEventListener('click',()=>{try{render(check(options()));}catch{reset();status.textContent='Input could not be checked';status.dataset.state='fail';summary.textContent='Check JSON or CSV syntax, duplicate keys, record count and input limits. No validation result was produced.';resultPanel.hidden=false;} revealResult();});
 value.addEventListener('input',reset);
- value.addEventListener("keydown",event=>{if(!event.isComposing && event.key==="Enter" && !event.shiftKey && mode.value==="single"&&!$("run").disabled){event.preventDefault();$("run").click();}});
+ document.addEventListener('keydown',event=>{if(!event.isComposing&&event.key==='Enter'&&(event.ctrlKey||event.metaKey)&&!$('run').disabled&&['value','schema'].includes(event.target.id)){event.preventDefault();$('run').click();}});
+ value.addEventListener("keydown",event=>{if(!event.isComposing && event.key==="Enter" && !event.shiftKey && !event.ctrlKey && !event.metaKey && mode.value==="single"&&!$("run").disabled){event.preventDefault();$("run").click();}});
 format.addEventListener('change',reset);
 $('example').addEventListener('click',()=>{if(value.value){if(!window.confirm('Replace current input with an example?'))return;}example();$("run").click();});
 $('clear').addEventListener('click',()=>{clear();reset();value.focus();});
-reset();for(const id of ['run','example','clear'])$(id).disabled=false;
+reset();for(const id of ['run','example','clear'])$(id).disabled=false;$('loading').hidden=true;
 }

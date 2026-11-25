@@ -87,12 +87,21 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal(headers.headers.get("strict-transport-security"), "max-age=86400");
     assert.equal(headers.headers.get("x-content-type-options"), "nosniff");
     assert.match(headers.headers.get("content-security-policy"), /style-src[^;]*https:\/\/sandbox-cdn\.paddle\.com/);
-    for (const route of ["/", "/review", "/review/style.css", "/review/tool.js", "/review/index.js", "/review/strict-json.js", "/review/contract.js", "/review/csv.js", "/try", "/try/style.css", "/try/tool.js", "/try/core.js", "/try/strict-json.js", "/try/csv.js", "/app.js", "/robots.txt", "/sitemap.xml", "/terms", "/privacy", "/refund"]) {
+    for (const route of ["/", "/api", "/review", "/review/style.css", "/review/tool.js", "/review/index.js", "/review/strict-json.js", "/review/contract.js", "/review/csv.js", "/try", "/try/style.css", "/try/tool.js", "/try/core.js", "/try/strict-json.js", "/try/csv.js", "/app.js", "/robots.txt", "/sitemap.xml", "/terms", "/privacy", "/refund"]) {
       const head = await fetch(base + route, { method: "HEAD" });
       assert.equal(head.status, 200, "HEAD should succeed for " + route);
       assert.ok(Number(head.headers.get("content-length")) > 0, "HEAD should expose content-length for " + route);
       assert.equal(await head.text(), "");
     }
+    const home=await fetch(base+"/");
+    assert.match(home.headers.get("content-security-policy"), /connect-src 'none'/);
+    assert.equal(home.headers.get("referrer-policy"),"no-referrer");
+    const homeHtml=await home.text();
+    assert.match(homeHtml,/id="run"/);
+    assert.match(homeHtml,/href="\/api#plans"/);
+    assert.doesNotMatch(homeHtml, /paddle\.js|<form|<script[^>]+src="https?:/i);
+    const apiPage=await fetch(base+"/api");
+    assert.match(await apiPage.text(), /Paddle/i);
     const localPage = await fetch(base + "/try");
     assert.match(localPage.headers.get("content-security-policy"), /connect-src 'none'/);
     assert.match(localPage.headers.get("content-security-policy"), /form-action 'none'/);
