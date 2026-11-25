@@ -107,3 +107,6 @@ input[type=file]::file-selector-button{min-height:44px;border:1px solid var(--co
 .quick .file-feedback{font-size:14px;color:var(--muted);margin:4px 0 0}
 .quick .file-feedback:empty{display:none}
 @media(max-width:400px){.quick .field-heading{min-height:44px}.quick .panel{padding:8px 12px}}
+
+.quick .brand-short{display:none}
+@media(max-width:400px){.quick .brand-full{display:none}.quick .brand-short{display:inline}.quick nav{gap:4px;flex-wrap:nowrap}.quick .nav-actions{gap:8px;flex-wrap:nowrap}.quick .nav-actions a{white-space:nowrap}.quick .product-name{font-size:14px}.quick .actions{grid-template-columns:minmax(0,1fr) auto auto}.quick .actions button{padding-inline:6px}}

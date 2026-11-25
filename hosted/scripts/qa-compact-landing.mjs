@@ -15,8 +15,8 @@ try{
  const metrics=[];
  for(const [width,height] of [[320,568],[360,740],[390,844],[768,1024],[1024,768],[1280,720],[1440,900],[1920,1080]]){
   const context=await browser.newContext({viewport:{width,height}});
-  const external=[],posts=[],errors=[];
-  await context.route("**/*",route=>{const req=route.request(),url=new URL(req.url());if(url.origin!==base){external.push(url.origin);return route.abort();}if(req.method()!=="GET")posts.push(req.method()+" "+url.pathname);return route.continue();});
+  const external=[],posts=[],errors=[],requests=[];
+  await context.route("**/*",route=>{const req=route.request(),url=new URL(req.url());requests.push([req.method(),url.pathname]);if(url.origin!==base){external.push(url.origin);return route.abort();}if(req.method()!=="GET")posts.push(req.method()+" "+url.pathname);return route.continue();});
   await context.grantPermissions(["clipboard-read","clipboard-write"]);
   const page=await context.newPage();page.on("pageerror",e=>errors.push(String(e)));
 
@@ -34,6 +34,11 @@ try{
   assert.ok(home.width<=width&&home.height<=height+1,"direct home overflow "+JSON.stringify(home));
   assert.ok(home.primaryBottom<=height&&home.reviewBottom<=height&&home.planBottom<=height,"home action not visible");
   assert.ok(home.buttonHeight>=44&&home.inputSize>=16);
+  const allowedHome=new Set(["/","/try/style.css","/try/tool.js","/try/core.js","/try/strict-json.js","/try/csv.js","/favicon.ico"]);
+  assert.ok(requests.every(([method,url])=>method==="GET"&&allowedHome.has(url)),"unexpected home request "+JSON.stringify(requests));
+  const footprint=await page.evaluate(()=>[...performance.getEntriesByType("navigation"),...performance.getEntriesByType("resource")].reduce((n,e)=>n+(e.decodedBodySize||0),0));
+  assert.ok(footprint>0&&footprint<=49152,"local tool resource budget exceeded: "+footprint);
+
   assert.ok(await page.locator("#result-panel").isHidden());
   await page.screenshot({path:"qa-screenshots/home-"+width+"x"+height+".png",fullPage:true});
   await page.locator("#example").click();
@@ -119,7 +124,7 @@ try{
    assert.equal(external.length,0,"private tool made external request");
   }
   assert.equal(errors.length,0,errors.join("\n"));
-  metrics.push({viewport:{width,height},...home,verticalScroll:Math.max(0,home.height-height),sample:"pass/fail verified",sandboxCheckout:"disabled",externalRequests:external.length,inputPosts:posts.length});
+  metrics.push({viewport:{width,height},...home,decodedBytes:footprint,verticalScroll:Math.max(0,home.height-height),sample:"pass/fail verified",sandboxCheckout:"disabled",externalRequests:external.length,inputPosts:posts.length});
   await context.close();
  }
  await fs.writeFile("qa-screenshots/metrics.json",JSON.stringify(metrics,null,2)+"\n");
