@@ -718,6 +718,9 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
     if (isStaticRead && route === "/privacy") return serveStatic(res, "privacy.html", undefined, headOnly);
     if (isStaticRead && route === "/refund") return serveStatic(res, "refund.html", undefined, headOnly);
     if (isStaticRead && route === "/api") return serveStatic(res, "api.html", undefined, headOnly);
+    if (isStaticRead && route === "/automation") return serveStatic(res, "automation.html", undefined, headOnly);
+    if (isStaticRead && route === "/automation.mjs") return serveStatic(res, "automation.mjs", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/automation-example.json") return serveStatic(res, "automation-example.json", "application/json; charset=utf-8", headOnly);
 
     return json(res, 404, { error: "not_found" });
   } catch (error) {

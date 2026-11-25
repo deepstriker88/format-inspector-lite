@@ -130,3 +130,5 @@ input[type=file]::file-selector-button{min-height:44px;border:1px solid var(--co
  .actions button:not(#run):disabled,.quick .result-actions button:disabled{color:#b0bdcd;border-color:var(--line)}
  .quick .result-actions button:not(:disabled):hover,.issue-location:not(:disabled):hover{background:#303d50;color:var(--hover)}
 }
+
+.table-column{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:8px;margin:6px 0}.table-column label{overflow-wrap:anywhere;margin:0}.table-column select{width:100%;min-width:0}#table-options{margin-top:8px}#table-fields{max-height:18rem;overflow:auto}

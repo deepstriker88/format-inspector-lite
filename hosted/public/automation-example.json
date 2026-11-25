@@ -1,0 +1,12 @@
+{
+  "records": [
+    {
+      "format": "email",
+      "value": "user@example.com"
+    },
+    {
+      "format": "ipv4",
+      "value": "999.1.2.3"
+    }
+  ]
+}

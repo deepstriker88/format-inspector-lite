@@ -157,3 +157,12 @@ Limits: UTF-8 text 64 KiB, 100 data rows, 32 columns, 4 KiB optional profile,
 256 KiB output. No automatic type guessing, upload, persistence or new runtime
 dependency. The published package/version and managed API behavior are unchanged
 until a separate release review.
+
+
+### Optional managed automation runner (next hosted release)
+
+Validate a list of typed values before import. Reports record numbers and verdicts, not original values.
+
+Download the runner and synthetic input from /automation. Run node automation.mjs automation-example.json locally to preview the call count; pass --send with EZTOOLGO_API_KEY configured to submit checks to the existing managed API. No subscription price, authentication, entitlement, or billing changes. The runner does not persist user input or keys and outputs a redacted release verdict. Default 100 calls, explicit maximum 500. No automatic retries. Review candidate; not deployed.
+
+The CSV columns mode checks ordinary spreadsheet exports without reshaping them to format/value pairs. Read headers, select 1–20 formats, inspect row-level findings, and optionally export up to 500 selected cell checks to the automation runner.
