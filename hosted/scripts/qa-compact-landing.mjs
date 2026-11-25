@@ -44,6 +44,21 @@ try{
   const copied=await page.evaluate(()=>navigator.clipboard.readText());
   assert.match(copied,/Issues found|No reported issues/);
   assert.doesNotMatch(copied,/@|email|quantity|PRIVATE_TEST_VALUE/);
+  if(width===390){
+  await page.locator("#clear").click();
+  await page.locator("#value-file").setInputFiles({name:"records.csv",mimeType:"text/csv",buffer:Buffer.from("format,value\nemail,user@example.com\nipv4,999.1.2.3")});
+  await page.waitForFunction(()=>document.getElementById("mode").value==="csv"&&document.getElementById("value").value.includes("ipv4"));
+  await page.locator("#run").click();
+  assert.equal(await page.locator("#status").getAttribute("data-state"),"fail");
+  const preserved=await page.locator("#value").inputValue();
+  page.once("dialog",d=>d.accept());
+  await page.locator("#value-file").setInputFiles({name:"too-big.json",mimeType:"application/json",buffer:Buffer.alloc(65537)});
+  await page.waitForFunction(()=>document.getElementById("file-feedback").textContent.includes("not loaded"));
+  assert.equal(await page.locator("#value").inputValue(),preserved);
+  page.once("dialog",d=>d.dismiss());
+  await page.locator("#value-file").setInputFiles({name:"replacement.json",mimeType:"application/json",buffer:Buffer.from("[]")});
+  assert.equal(await page.locator("#value").inputValue(),preserved);
+  }
   await page.locator("#value").fill("PRIVATE_TEST_VALUE");
   assert.ok(await page.locator("#copy-result").isDisabled());
   assert.ok(await page.locator("#result-panel").isHidden());

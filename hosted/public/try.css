@@ -98,3 +98,12 @@ input[type=file]::file-selector-button{min-height:44px;border:1px solid var(--co
 @media(min-width:761px){.quick .workspace{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}}
 @media(max-width:760px){.quick nav{min-height:44px}.quick header{margin:12px 0 8px}.quick .panel{padding:12px}.quick .private-label{margin-top:6px}.quick .actions{gap:6px}.quick .actions button{font-size:14px;padding:10px 8px}.quick .tool-info{margin-top:6px}}
 @media(max-width:400px){.quick nav{gap:0}.quick .nav-actions{gap:12px}.quick .nav-actions a{font-size:13px}.quick .product-name{font-size:14px}.quick header{margin:8px 0}.quick header p{font-size:15px}.quick .panel label{margin-top:8px}.quick .input-grid label{margin-top:0}.quick textarea{min-height:64px;padding:8px 10px}.quick .tool-info{margin-top:4px}.quick .private-label{font-size:13px}}
+
+/* Native file chooser; no file bytes leave the document. */
+.quick .field-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}
+.quick .field-heading label{margin:0}
+.quick .file-open{background:transparent;color:var(--accent);border-color:transparent;font-size:13px;padding:6px 8px;font-weight:600}
+.quick .file-open:not(:disabled):hover{background:#edf0f5;color:var(--hover)}
+.quick .file-feedback{font-size:14px;color:var(--muted);margin:4px 0 0}
+.quick .file-feedback:empty{display:none}
+@media(max-width:400px){.quick .field-heading{min-height:44px}.quick .panel{padding:8px 12px}}
