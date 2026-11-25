@@ -44,6 +44,7 @@ function render(r){
 }
 $('run').addEventListener('click',()=>{try{render(check(options()));}catch{reset();status.textContent='Input could not be checked';status.dataset.state='fail';summary.textContent='Check JSON or CSV syntax, duplicate keys, record count and input limits. No validation result was produced.';}});
 value.addEventListener('input',reset);
+ value.addEventListener("keydown",event=>{if(!event.isComposing && event.key==="Enter" && !event.shiftKey && mode.value==="single"&&!$("run").disabled){event.preventDefault();$("run").click();}});
 format.addEventListener('change',reset);
 $('example').addEventListener('click',()=>{if(value.value){if(!window.confirm('Replace current input with an example?'))return;}example();reset();});
 $('clear').addEventListener('click',()=>{clear();reset();value.focus();});

@@ -30,7 +30,7 @@ try{
   const controls=await page.evaluate(()=>({buttonHeight:document.getElementById("sample-run").getBoundingClientRect().height,inputSize:parseFloat(getComputedStyle(document.getElementById("sample-select")).fontSize)}));
   assert.ok(controls.buttonHeight>=44&&controls.inputSize>=16,"readability/touch sizing: "+JSON.stringify(controls));
   await page.locator("#sample-run").click();assert.equal(await page.locator("#sample-output").getAttribute("data-state"),"fail");assert.notEqual(await page.locator("#sample-output").textContent(),"Example could not be checked.");
-  await page.locator("#sample-select").selectOption("good");await page.locator("#sample-run").click();assert.equal(await page.locator("#sample-output").getAttribute("data-state"),"pass");
+  await page.locator("#sample-select").selectOption("good");assert.equal(await page.locator("#sample-output").getAttribute("data-state"),"pass");
   assert.equal(posts.length,0,"local demo transmitted data");assert.equal(external.length,0,"external dependency before plans");
   await page.locator('[data-open="plans"]').first().click();await page.waitForFunction(()=>document.getElementById("plan-status").textContent.includes("no real payment"));
   assert.equal(await page.locator("#plans").evaluate(e=>e.open),true);

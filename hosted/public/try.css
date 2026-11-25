@@ -34,3 +34,17 @@ footer{margin-top:32px;padding-top:20px;border-top:1px solid var(--line);display
 [hidden]{display:none!important}details{margin-top:16px}summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}summary::after{content:"+";margin-left:auto}details[open] summary::after{content:"−"}
 @media(max-width:760px){.workspace{grid-template-columns:1fr}main{padding:12px 16px 36px}.panel{padding:18px}header{margin:24px 0}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* EZTOOLGO independent task-first design */
+
+:root{--canvas:#f5f6f8;--surface:#fff;--ink:#202530;--muted:#525b69;--line:#d7dce3;--control:#788496;--accent:#354c86;--focus:#354c86;--error:#a32b36;--radius:12px;font-family:system-ui,sans-serif}
+main{max-width:1120px;padding:12px clamp(16px,3vw,32px) 24px}
+nav{padding-bottom:4px}header{margin:16px 0 16px}
+header p{margin:6px 0 0}header .eyebrow{display:none}
+h1{font-size:clamp(26px,3.2vw,38px);letter-spacing:-.025em;line-height:1.2;margin:0}
+h2{font-size:18px;margin:0 0 12px}label{margin:12px 0 6px}
+.workspace{gap:12px}.panel{padding:16px}
+.actions{margin-top:16px;gap:8px}
+textarea{min-height:96px;max-height:240px}
+button{border-radius:8px}button#run{background:#354c86;color:#fff}
+@media(max-width:700px){main{padding-top:8px}header{margin:12px 0}.panel{padding:12px}.workspace{gap:12px}h1{font-size:26px}textarea{min-height:88px}.actions{margin-top:12px}}
