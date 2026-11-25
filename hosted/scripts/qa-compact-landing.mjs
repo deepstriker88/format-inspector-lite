@@ -23,7 +23,7 @@ try{
   assert.equal(box.width,width,"horizontal overflow");
   assert.ok(box.primaryBottom<=height,"free action outside first viewport");
   assert.ok(box.reviewBottom<=height,"review action outside first viewport");
-  if(width>=360)assert.ok(box.height<=height+1,"initial page requires vertical scroll: "+width+"x"+height+" height "+box.height);
+  assert.ok(box.height<=height+1,"initial page requires vertical scroll: "+width+"x"+height+" height "+box.height);
   console.log("initial layout",width,height,JSON.stringify(box));
   await page.screenshot({path:"qa-screenshots/landing-"+width+"x"+height+".png",fullPage:true});
   if(!await page.locator("#sample-panel").evaluate(e=>e.open))await page.locator("#sample-panel summary").click();
@@ -39,6 +39,9 @@ try{
   await page.keyboard.press("Escape");assert.equal(await page.locator("#plans").evaluate(e=>e.open),false);
   await page.locator('[data-open="more"]').click();assert.equal(await page.locator("#more").evaluate(e=>e.open),true);
   assert.ok((await page.locator("#more").textContent()).includes("npm install"));
+  assert.equal(await page.locator("#comparison a[href^='https:']").count(),2);
+  assert.match(await page.locator("#technical").textContent(),/connect-src/);
+  assert.match(await page.locator("#installation").textContent(),/@0.1.0/);
   await page.keyboard.press("Escape");
   assert.equal(errors.length,0,errors.join("\n"));
   metrics.push({viewport:{width,height},...box,...controls,verticalScroll:Math.max(0,box.height-height),sample:"pass/fail verified",sandboxCheckout:"disabled",externalRequests:external.length,inputPosts:posts.length});

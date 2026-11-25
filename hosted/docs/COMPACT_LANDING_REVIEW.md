@@ -34,3 +34,21 @@ document height, controls, sample pass/fail, no-input network transmission,
 sandbox billing refusal and modal keyboard dismissal. No Chromium installed
 on the Oracle host. Results pending until exact CI passes. No npm version
 change, public package republication or live billing switch.
+
+## Evidence and narrow-screen refinement, 2026-11-26 KST
+
+Comparison, technical limits, installation and free/paid scope are reachable
+through View More. The comparison references official documentation and does
+not claim feature parity, benchmark superiority or equivalent paid plans.
+At 320x568, redundant proof badges and repeated differentiator copy move
+out of the initial viewport while the free-use, comparison, sample, price
+and legal/support actions remain accessible. The browser gate now requires
+zero initial vertical overflow at 320x568 too.
+
+The published npm 0.1.0 registry SHA-512 integrity was matched against the
+reviewed release archive on Oracle. Its actual bin and source inventory
+contains the contract/regression CLI. The comparison workspace no longer
+describes this published functionality as a next-release candidate. This
+change is hosted presentation/docs/QA only; no npm republish or payment
+activation. Actual browser and deployment evidence must match the new
+reviewed source.
