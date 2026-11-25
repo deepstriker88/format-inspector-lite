@@ -186,9 +186,15 @@ def prepare(expected_sha, version, output):
     packed = run([*npm, "pack", "--offline", "--ignore-scripts", "--json",
                   "--pack-destination", str(output)])
     rows = json.loads(packed.stdout)
-    if not isinstance(rows, list) or len(rows) != 1:
+    # npm 10/11 use an array; npm 12 returns a package-name keyed object.
+    if isinstance(rows, list) and len(rows) == 1:
+        row = rows[0]
+    elif isinstance(rows, dict) and set(rows) == {name}:
+        row = rows[name]
+    else:
         raise ValueError("unexpected npm pack output")
-    row = rows[0]
+    if not isinstance(row, dict):
+        raise ValueError("invalid npm pack metadata")
     filename = f"{name}-{version}.tgz"
     if row.get("filename") != filename or row.get("name") != name or row.get("version") != version:
         raise ValueError("archive identity mismatch")
