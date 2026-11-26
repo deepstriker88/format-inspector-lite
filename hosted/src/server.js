@@ -1,3 +1,4 @@
+import {initAdjustments,createAdjustments} from "./billing-adjustments.js";
 import {renderPlans} from "./plans-ui.js";
 import {initRecovery,createRecovery} from "./key-recovery.js";
 import {renderSupport} from "./support.js";
@@ -123,8 +124,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_activation_transaction
   ON activations(paddle_transaction_id) WHERE paddle_transaction_id IS NOT NULL;
 `);
 
+initAdjustments(db);
+const adjustments=createAdjustments(db);
 initRecovery(db);
-const recovery=createRecovery(db,{product:"fil",mode:config.paddleEnv});
+const recovery=createRecovery(db,{product:"fil",mode:config.paddleEnv,isBlocked:adjustments.isBlocked});
 
 function nowSeconds() {
   return Math.floor(Date.now() / 1000);
@@ -251,11 +254,12 @@ function apiKeyFromRequest(req) {
 
 function findApiKey(rawKey) {
   if (!rawKey || !rawKey.startsWith(config.paddleEnv==="live"?"fil_live_":"fil_test_") || !/^[A-Za-z0-9_-]{1,128}$/.test(rawKey)) return null;
-  return db.prepare(`
+  const key=db.prepare(`
     SELECT id, email, plan, status, key_prefix, paddle_subscription_id
       FROM api_keys
      WHERE key_hash = ?
   `).get(sha256(rawKey)) || null;
+  return key && adjustments.isBlocked(key.id) ? {...key,status:"suspended"} : key;
 }
 
 function recordUsage(keyId, limit) {
@@ -393,8 +397,8 @@ function applyVerifiedPaidUpgrade(data, plan) {
   if (!state || state.status !== "active" || state.plan !== "team") return false;
   const result = db.prepare(
     "UPDATE api_keys SET plan='team',updated_at=? " +
-    "WHERE paddle_subscription_id=? AND status='active' AND plan='pro'"
-  ).run(nowSeconds(), subscriptionId);
+    "WHERE paddle_subscription_id=? AND paddle_customer_id=? AND status='active' AND plan='pro'"
+  ).run(nowSeconds(), subscriptionId, data.customer_id);
   return Number(result.changes) > 0;
 }
 
@@ -617,6 +621,7 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
       }
       const key = db.prepare("SELECT plan,status FROM api_keys WHERE id=?")
         .get(activation.api_key_id);
+      if(adjustments.isBlocked(activation.api_key_id))return json(res,403,{error:"payment_adjustment_hold"});
       const apiKey = activation.api_key_plain;
       db.prepare(
         "UPDATE activations SET api_key_plain=NULL WHERE id=?"
@@ -658,7 +663,10 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
         if (plan) {
           if (typeof activationId === "string") provisionActivation(activationId, plan, data);
           applyVerifiedPaidUpgrade(data, plan);
+          adjustments.recordPaid(data,event.occurred_at,plan);
         }
+      } else if(eventType==="adjustment.created"||eventType==="adjustment.updated"){
+        adjustments.recordAdjustment(data,event.occurred_at);
       } else if (
         eventType === "subscription.created" ||
         eventType === "subscription.activated" ||

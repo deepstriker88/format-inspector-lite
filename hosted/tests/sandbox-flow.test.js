@@ -230,6 +230,19 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal((await request("/v1/usage",undefined,token)).body.plan,usage.body.plan);
     assert.equal((await request("/billing/claim",{activationId,claimSecret})).status,410);
 
+    const adjustment={id:"adj_fixture",transaction_id:"txn_isolated",subscription_id:"sub_isolated",customer_id:"ctm_isolated",action:"refund",type:"full",status:"pending_approval"};
+    const adjustAt=n=>new Date(Date.now()+n).toISOString();
+    assert.equal((await webhook("adjustment.created","evt_refund_pending",adjustment,adjustAt(20))).status,200);
+    assert.equal((await request("/v1/usage",undefined,token)).body.status,"active");
+    assert.equal((await webhook("adjustment.updated","evt_refund_approved",{...adjustment,status:"approved"},adjustAt(40))).status,200);
+    assert.equal((await request("/v1/usage",undefined,token)).body.status,"suspended");
+    assert.equal((await request("/billing/recovery/rotate",{code:replacementCode,newKey:fresh(recoveryConfig.body.keyPrefix),newCode:fresh(recoveryConfig.body.codePrefix)})).status,401);
+    await webhook("adjustment.created","evt_refund_stale",adjustment,adjustAt(-1000));
+    assert.equal((await request("/v1/usage",undefined,token)).body.status,"suspended");
+    await webhook("transaction.completed","evt_renewal",{...purchase,id:"txn_renewal",origin:"subscription_recurring",custom_data:{}},adjustAt(1000));
+    assert.equal((await request("/v1/usage",undefined,token)).body.status,"active");
+    assert.equal((await request("/v1/usage",undefined,token)).body.used,usage.body.used);
+
     const teamChange = await webhook("subscription.updated","evt_team_not_paid",{
       id:"sub_isolated", status:"active",
       items:[{price:{id:"pri_test_team"},quantity:1}],
@@ -237,6 +250,12 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal(teamChange.status,200);
     const notUpgraded = await request("/v1/usage",undefined,token);
     assert.equal(notUpgraded.body.plan,"pro");
+
+    await webhook("transaction.completed","evt_wrong_customer_upgrade",{
+      ...purchase,id:"txn_wrong_customer",customer_id:"ctm_other",custom_data:{},origin:"subscription_update",
+      items:[{price:{id:"pri_test_team"},quantity:1}],details:{totals:{total:"999"}}
+    });
+    assert.equal((await request("/v1/usage",undefined,token)).body.plan,"pro");
 
     const teamPaid = await webhook("transaction.completed","evt_team_paid",{
       ...purchase, id:"txn_paid_upgrade", custom_data:{},

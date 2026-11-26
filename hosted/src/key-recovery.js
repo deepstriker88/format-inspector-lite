@@ -11,7 +11,7 @@ function validToken(value,prefix){
 export function initRecovery(db){
  db.exec("CREATE TABLE IF NOT EXISTS key_recovery (api_key_id INTEGER PRIMARY KEY REFERENCES api_keys(id) ON DELETE CASCADE, code_hash TEXT NOT NULL UNIQUE, updated_at INTEGER NOT NULL)");
 }
-export function createRecovery(db,{product,mode}){
+export function createRecovery(db,{product,mode,isBlocked=()=>false}){
  if(!/^[a-z][a-z0-9]{1,11}$/.test(product)||!["sandbox","live"].includes(mode))throw Error("invalid recovery context");
  const keyPrefix=product+"_"+(mode==="live"?"live":"test")+"_";
  const codePrefix="rcv_"+keyPrefix;
@@ -25,7 +25,7 @@ export function createRecovery(db,{product,mode}){
    if(!validToken(key,keyPrefix)||!validToken(code,codePrefix)||key.slice(keyPrefix.length)===code.slice(codePrefix.length))return bad;
    return tx(()=>{
     const row=db.prepare("SELECT k.id FROM api_keys k WHERE k.key_hash=? AND "+eligible).get(hash(key));
-    if(!row)return bad;
+    if(!row||isBlocked(row.id))return bad;
     if(db.prepare("SELECT 1 FROM key_recovery WHERE api_key_id=?").get(row.id))return {status:409,error:"recovery_already_enrolled"};
     if(db.prepare("SELECT 1 FROM key_recovery WHERE code_hash=?").get(hash(code)))return {status:409,error:"credential_conflict"};
     db.prepare("INSERT INTO key_recovery(api_key_id,code_hash,updated_at) VALUES(?,?,?)").run(row.id,hash(code),now());
@@ -36,7 +36,7 @@ export function createRecovery(db,{product,mode}){
    if(!validToken(code,codePrefix)||!validToken(newKey,keyPrefix)||!validToken(newCode,codePrefix)||code===newCode||newKey.slice(keyPrefix.length)===newCode.slice(codePrefix.length)||newKey.slice(keyPrefix.length)===code.slice(codePrefix.length))return bad;
    return tx(()=>{
     const row=db.prepare("SELECT k.id,k.key_hash FROM key_recovery r JOIN api_keys k ON k.id=r.api_key_id WHERE r.code_hash=? AND "+eligible).get(hash(code));
-    if(!row)return bad;
+    if(!row||isBlocked(row.id))return bad;
     if(row.key_hash===hash(newKey)||db.prepare("SELECT 1 FROM api_keys WHERE key_hash=?").get(hash(newKey))||db.prepare("SELECT 1 FROM key_recovery WHERE code_hash=?").get(hash(newCode)))return {status:409,error:"credential_conflict"};
     db.prepare("UPDATE api_keys SET key_hash=?,key_prefix=?,updated_at=? WHERE id=?").run(hash(newKey),newKey.slice(0,16),now(),row.id);
     db.prepare("UPDATE key_recovery SET code_hash=?,updated_at=? WHERE api_key_id=?").run(hash(newCode),now(),row.id);
