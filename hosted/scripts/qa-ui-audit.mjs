@@ -41,6 +41,16 @@ try{
     const colors=[state.bg,state.ink,state.accent,state.font];
     if(!palette)palette=colors;else assert.deepEqual(colors,palette,route+" mismatched palette");
     assert.equal(state.headColor,state.bodyColor,route+" heading color mismatch");
+    // Check actual foreground/background pairs, not just token names.
+    const contrast=await p.evaluate(()=>{
+      const rgb=x=>x.match(/[\d.]+/g)?.map(Number)||[];
+      const luminance=c=>c.slice(0,3).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
+      const ratio=(a,b)=>{const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+      const background=el=>{while(el){const c=rgb(getComputedStyle(el).backgroundColor);if(c.length===3||c[3]===1)return c;el=el.parentElement}return [255,255,255]};
+      const check=el=>{const c=rgb(getComputedStyle(el).color);return ratio(c,background(el))};
+      return {heading:check(document.querySelector("h1")),body:check(document.body)};
+    });
+    assert.ok(contrast.heading>=4.5&&contrast.body>=4.5,route+" inadequate text contrast "+JSON.stringify(contrast));
     if(modalPaths.has(route)){
      const trigger=p.locator('a[href="/api#plans"]').first();
      const input=p.locator("textarea:visible,input[type=text]:visible").first();
@@ -57,6 +67,18 @@ try{
      for(const plan of ["pro","team"]){const price=config.pricing[plan];assert.ok((await dialog.textContent()).includes("$"+price.usdMonthly.toFixed(2)));assert.ok((await dialog.textContent()).includes(price.monthlyRequests.toLocaleString("en-US")))}
      assert.match(await dialog.textContent(),/real-money payments are not enabled/);
      assert.equal(await dialog.locator("a.ez-continue").getAttribute("target"),"_blank");
+     if(route==="/"&&width===390){
+      const popupPromise=p.waitForEvent("popup");
+      await dialog.locator("a.ez-continue").click();
+      const popup=await popupPromise;await popup.waitForLoadState("domcontentloaded");
+      assert.equal(new URL(popup.url()).pathname,"/api");
+      assert.equal(new URL(popup.url()).hash,"#plans");
+      await popup.locator("#plans,#plans-dialog").waitFor({state:"visible"});
+      assert.equal(p.url(),start);
+      assert.ok(await dialog.isVisible());
+      if(hasInput)assert.equal(await input.inputValue(),"UI_PRIVATE_FIXTURE");
+      await popup.close();await p.bringToFront();
+     }
      assert.ok(await dialog.locator("button").evaluate(x=>x.getBoundingClientRect().height>=44));
      if(width===390||width===1440)await p.screenshot({path:"qa-screenshots/ui-audit/"+colorScheme+"-"+width+"-"+(route.slice(1)||"home")+"-plans.png"});
      await p.keyboard.press("Escape");assert.ok(await dialog.isHidden());
@@ -66,6 +88,14 @@ try{
     if(width===390||width===1440)await p.screenshot({path:"qa-screenshots/ui-audit/"+colorScheme+"-"+width+"-"+(route.slice(1)||"home")+".png"});
     results.push({route,width,height,colorScheme,layout:"pass",theme:"pass",modal:modalPaths.has(route)?"pass":"n/a"});
    }
+   await p.goto(base+"/api#plans",{waitUntil:"domcontentloaded"});
+   const billing=p.locator("#plans,#plans-dialog");
+   await billing.waitFor({state:"visible"});
+   const bounds=await billing.boundingBox();
+   assert.ok(bounds.x>=-1&&bounds.x+bounds.width<=width+1&&bounds.y>=-1&&bounds.y+bounds.height<=height+1,"billing dialog overflow");
+   const close=billing.getByRole("button",{name:"Close",exact:true}).first();
+   assert.ok(await close.evaluate(x=>x.getBoundingClientRect().height>=44));
+   await close.click();assert.ok(await billing.isHidden());
    assert.deepEqual(pageErrors,[]);
    assert.ok(requests.every(([method])=>method==="GET"||method==="HEAD"),"Unexpected input upload");
    await context.close();
