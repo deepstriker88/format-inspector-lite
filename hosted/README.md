@@ -69,3 +69,8 @@ References:
 https://developer.paddle.com/webhooks/about/signature-verification/
 https://developer.paddle.com/build/go-live-checklist/
 https://www.sqlite.org/lang_vacuum.html
+
+
+## Optional voluntary support
+
+Set BUY_ME_A_COFFEE_USERNAME in the deployment .env only after the owner has confirmed the actual recipient page and enabled payouts. The server renders a plain Buy me a coffee link in the legal/support area; it is absent when the setting is empty or malformed. No new external requests, tracking scripts, subscription changes, API calls or credentials. The customer leaves the site only after clicking. This is voluntary support, not a purchase or entitlement.

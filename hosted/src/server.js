@@ -1,3 +1,4 @@
+import {renderSupport} from "./support.js";
 import {bindBillingContext} from "./billing-context.js";
 import http from "node:http";
 import fs from "node:fs";
@@ -270,7 +271,10 @@ function recordUsage(keyId, limit) {
 function serveStatic(res, filename, contentType = "text/html; charset=utf-8", headOnly = false) {
   const full = path.join(PUBLIC_DIR, filename);
   try {
-    const body = fs.readFileSync(full);
+    const raw = fs.readFileSync(full);
+    const body = ["index.html","try.html","api.html","review.html","automation.html"].includes(filename)
+      ? Buffer.from(renderSupport(raw.toString("utf8"), process.env.BUY_ME_A_COFFEE_USERNAME))
+      : raw;
     res.writeHead(200, {
       "content-type": contentType,
       "content-length": body.length,
