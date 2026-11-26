@@ -132,3 +132,9 @@ Blank optional cells skip format/unique checks; uniqueness otherwise compares ex
 strings. UTF-8 CSV only, not TSV/XLSX. No network, account or database required.
 This does not verify data authenticity or guarantee successful downstream import.
 This source includes the feature. Check the npm registry for the published version before installation; a staging placeholder is not a usable release.
+
+<!-- eztoolgo-voluntary-support:start -->
+## Support development
+
+If this tool saves you time, you can [buy me a coffee](https://buymeacoffee.com/eztoolgo). Voluntary support does not unlock features or purchase service access.
+<!-- eztoolgo-voluntary-support:end -->
