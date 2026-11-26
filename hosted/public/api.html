@@ -5,9 +5,7 @@
 <meta name="description" content="Check email, IP, UUID and other formats in text, CSV or JSON. Free local MIT package. No sign-up for browser checks.">
 <link rel="canonical" href="https://format-inspector.eztoolgo.duckdns.org/api"><meta name="robots" content="noindex,follow">
 <meta property="og:type" content="website"><meta property="og:title" content="Format Inspector Lite"><meta property="og:description" content="Check email, IP, UUID and other text formats. Audit CSV or JSON and compare deliveries with a reusable contract."><meta property="og:url" content="https://format-inspector.eztoolgo.duckdns.org/">
-<style>
-/* EZTOOLGO / task-first v2. Original CSS; no external font or graphic assets. */
-:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--ink:#202530;--muted:#525b69;--line:#d7dce3;--control:#788496;--accent:#354c86;--hover:#253968;--pass:#23664d;--error:#a32b36;--space:8px;font:16px/1.5 system-ui,sans-serif}
+<style>:root{color-scheme:light;--bg:#f6f7f9;--surface:#fff;--ink:#182230;--muted:#4b596c;--line:#d9e0e8;--control:#68778b;--accent:#2355a6;--hover:#173e80;--pass:#176345;--error:#a62c39;--on-accent:#fff;--soft:#edf0f5;--disabled:#e6e9ee;--disabled-ink:#526071;--space:8px;font:16px/1.5 system-ui,sans-serif}@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#121720;--surface:#1c2531;--ink:#f1f4f8;--muted:#b7c4d5;--line:#394657;--control:#91a0b5;--accent:#a7c9ff;--hover:#d0e2ff;--pass:#8bd5b4;--error:#ffb3b9;--on-accent:#11233c;--soft:#303d50;--disabled:#303a48;--disabled-ink:#b0bdcd}}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);min-width:0}
 [hidden]{display:none!important}
@@ -18,11 +16,11 @@ h2{font-weight:650;font-size:20px;line-height:1.3;letter-spacing:-.015em}
 h3{font-size:16px;font-weight:650;line-height:1.4}
 p,li{overflow-wrap:anywhere}
 button,input,select,textarea{font:inherit;color:inherit;min-width:0}
-button,.btn,.button-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid var(--accent);background:var(--accent);color:white;border-radius:8px;font-weight:650;line-height:1.25;text-decoration:none;text-align:center;cursor:pointer;touch-action:manipulation}
-button:not(:disabled):hover,.btn:hover,.button-link:hover{background:var(--hover);color:white}
+button,.btn,.button-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);border-radius:8px;font-weight:650;line-height:1.25;text-decoration:none;text-align:center;cursor:pointer;touch-action:manipulation}
+button:not(:disabled):hover,.btn:hover,.button-link:hover{background:var(--hover);color:var(--on-accent)}
 button.secondary,.btn.secondary,.button-link.secondary{background:var(--surface);color:var(--accent);border-color:var(--control)}
-button.secondary:not(:disabled):hover,.btn.secondary:hover,.button-link.secondary:hover{background:#edf0f5;color:var(--hover)}
-button:disabled{background:#e6e9ee;color:#697280;border-color:var(--line);cursor:not-allowed}
+button.secondary:not(:disabled):hover,.btn.secondary:hover,.button-link.secondary:hover{background:var(--soft);color:var(--hover)}
+button:disabled{background:var(--disabled);color:var(--disabled-ink);border-color:var(--line);cursor:not-allowed}
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 textarea,select,input:not([type=checkbox]):not([type=file]){display:block;max-width:100%;width:100%;padding:10px 12px;border:1px solid var(--control);background:var(--surface);border-radius:8px;font-size:16px}
 select,input:not([type=checkbox]):not([type=file]){min-height:44px}
@@ -35,12 +33,11 @@ details[open]>summary::after{content:"−"}
 details{min-width:0}
 .note,.fine,.legal,.status,.billing-note,.subnote{color:var(--muted);font-size:14px;line-height:1.5}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-/* Landing: one primary action, one optional example, one secondary information row. */
 .shell,body>main,.topbar{width:min(100% - 40px,1040px);margin-inline:auto}
 .shell .topbar{width:100%}
 .topbar{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}
 .brand{font-size:16px;font-weight:700;color:var(--ink);text-decoration:none;min-width:0;display:flex;align-items:center;gap:8px;overflow-wrap:anywhere;line-height:1.3}
-.mark{background:var(--accent);color:white;display:grid;place-items:center;flex:none;width:28px;height:28px;font-size:15px;border-radius:6px}
+.mark{background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none;width:28px;height:28px;font-size:15px;border-radius:6px}
 .nav{display:flex;align-items:center;gap:12px;flex:none}.nav a{font-size:14px;min-height:44px;display:flex;align-items:center}
 .nav button{padding:8px 12px}
 .hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:24px;align-items:start;padding:32px 0 16px}
@@ -57,8 +54,8 @@ details{min-width:0}
 .panel,.sample{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:20px;min-width:0}
 .sample summary{padding:0;min-height:44px;align-items:center}.sample summary h2{font-size:18px}
 .sample-inner{display:grid;gap:12px;padding-top:8px}
-.sample-inner>button,.demo-controls button{background:white;color:var(--accent);border-color:var(--control)}
-.sample-inner>button:not(:disabled):hover,.demo-controls button:not(:disabled):hover{background:#edf0f5;color:var(--hover)}
+.sample-inner>button,.demo-controls button{background:var(--surface);color:var(--accent);border-color:var(--control)}
+.sample-inner>button:not(:disabled):hover,.demo-controls button:not(:disabled):hover{background:var(--soft);color:var(--hover)}
 .sample-inner label{display:grid;gap:4px;font-size:14px;font-weight:600}
 .sample-output,.demo-summary{background:var(--bg);border-radius:8px;padding:12px;min-width:0;overflow-wrap:anywhere;font-size:15px}
 .sample-output[data-state=pass]{color:var(--pass)}.sample-output[data-state=fail]{color:var(--error)}
@@ -71,7 +68,7 @@ details{min-width:0}
 .demo-technical summary{font-size:14px}
 .secondary-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;grid-column:1/-1;padding:0 0 12px}
 .secondary-actions button{background:transparent;color:var(--accent);border-color:transparent;font-size:14px;font-weight:600;padding:8px 12px;text-decoration:none}
-.secondary-actions button:hover{background:#e9edf4;color:var(--hover)}
+.secondary-actions button:hover{background:var(--soft);color:var(--hover)}
 .feature-disclaimer{grid-column:1/-1}
 #purchase-status,#api-key-box{grid-column:1/-1}
 #api-key-box:empty{display:none}

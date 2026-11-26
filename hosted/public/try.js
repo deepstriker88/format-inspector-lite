@@ -1,5 +1,7 @@
 import {csvRows} from "./csv.js";
-import {csvToRecords,recordsToCsv} from './convert.js';
+let converters;
+async function loadConverters(){return converters??=await import('./convert.js');}
+if(typeof document==='undefined')await loadConverters();
 import {strictJson} from './strict-json.js';
 import {inspectFormat, inspectCsv, inspectJson, inspectTableCsv, explainResult} from './core.js';
 const LIMIT=65536;
@@ -11,8 +13,8 @@ export function check({value,schema,mode,format,profile="",mapping=null}){
   if(mode==='csv')return inspectCsv(value);
   if(mode==='table')return inspectTableCsv(value,mapping);
   if(mode==='json'){strictJson(value,{maxBytes:LIMIT,maxNodes:20000});const rows=inspectJson(value);if(!rows.length)throw new RangeError('At least one record is required');return rows;}
-  if(mode==='csv_to_json')return csvToRecords(value,profile);
-  if(mode==='json_to_csv')return recordsToCsv(value,profile);
+  if(mode==='csv_to_json')return converters.csvToRecords(value,profile);
+  if(mode==='json_to_csv')return converters.recordsToCsv(value,profile);
   throw new TypeError('Unsupported mode');
 }
 export async function readLocalText(file){
@@ -187,7 +189,7 @@ function revealResult(){
   status.scrollIntoView({block:"nearest",behavior:"instant"});
  }
 }
-$('run').addEventListener('click',()=>{inputRevision++;$('file-feedback').textContent='';try{render(check(options()));}catch{reset();status.textContent='Input could not be checked';status.dataset.state='fail';summary.textContent=mode.value==='table'?'Read CSV headers and select 1–20 column formats. Check CSV syntax and input limits.':conversionMode()?'Check the column rules, duplicate keys, matching row widths, supported text and formula-like prefixes. No converted file was produced.':'Check JSON or CSV syntax, duplicate keys, record count and input limits. No validation result was produced.';resultPanel.hidden=false;} revealResult();});
+$('run').addEventListener('click',async()=>{const revision=++inputRevision,opts=options();$('file-feedback').textContent='';try{if(conversionMode()&&!converters){$('run').disabled=true;status.textContent='Loading local converter…';try{await loadConverters();}finally{$('run').disabled=false;}if(revision!==inputRevision)return;}render(check(opts));}catch{if(revision!==inputRevision)return;reset();status.textContent='Input could not be checked';status.dataset.state='fail';summary.textContent=mode.value==='table'?'Read CSV headers and select 1–20 column formats. Check CSV syntax and input limits.':conversionMode()?'Check the column rules, duplicate keys, matching row widths, supported text and formula-like prefixes. No converted file was produced.':'Check JSON or CSV syntax, duplicate keys, record count and input limits. No validation result was produced.';resultPanel.hidden=false;} revealResult();});
 value.addEventListener('input',()=>{invalidateColumns();reset();});
  document.addEventListener('keydown',event=>{if(!event.isComposing&&event.key==='Enter'&&(event.ctrlKey||event.metaKey)&&!$('run').disabled&&['value','schema','conversion-profile'].includes(event.target.id)){event.preventDefault();$('run').click();}});
  value.addEventListener("keydown",event=>{if(!event.isComposing && event.key==="Enter" && !event.shiftKey && !event.ctrlKey && !event.metaKey && mode.value==="single"&&!$("run").disabled){event.preventDefault();$("run").click();}});

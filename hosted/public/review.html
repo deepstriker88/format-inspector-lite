@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer">
 <title>Compare recurring CSV deliveries — Format Inspector Lite</title><meta name="description" content="Validate the current delivery against a reusable column contract, and compare its quality with the previous delivery. No signup or input upload.">
 <link rel="canonical" href="https://format-inspector.eztoolgo.duckdns.org/review"><link rel="stylesheet" href="/review/style.css"></head><body>
-<main class="review-page"><nav aria-label="Product navigation"><a href="/">← Format Inspector Lite</a> <a href="/try">Quick check</a></nav>
+<main class="review-page"><nav aria-label="Product navigation"><a href="/">← Format Inspector Lite</a> <a href="/try">Quick check</a><a href="/api#plans">API plans</a></nav>
 <header><p class="eyebrow">Local review workspace</p><h1>Compare CSV deliveries</h1><p>Check two deliveries against one column contract. Local only · No upload.</p></header>
 <noscript><p>JavaScript is required. The same comparison is available in the next-release CLI candidate.</p></noscript>
 <div class="workspace review-workspace"><section class="panel"><h2>1. Prepare comparison</h2><details class="note"><summary>Example &amp; input guidance</summary><p>Example: previous delivery passes; current delivery has a repeated ID and an invalid email.</p></details>
@@ -20,4 +20,4 @@
 <p class="note">Exact header names and order, required values, unique strings and supported formats. Aggregate comparison only, not record reconciliation. Optional blank values skip format and uniqueness checks. Limits: 10,000 data rows, 50 columns per file.</p></section></div>
 <section class="panel cli-panel"><h2>Block malformed data before an automated import</h2><p>Repeat this related check in CI using the existing managed API. Preview call count free, then run with your own API key and a redacted release report.</p><a href="/automation">Get the automation runner</a></section><section class="panel cli-panel"><h2>3. Repeat in CI or on your computer</h2><p>Use the same comparison core in the next-release CLI candidate. Not a claim that the current registry package includes it.</p><pre>format-inspector-contract --profile rules.json --input current.csv --previous previous.csv</pre><p>Keep the previous delivery or rule revision and reviewed contract with your project. The browser report is a point-in-time result, not a signed attestation.</p></section>
 <footer><!-- optional-support --><a href="/">Product and hosted API</a><a href="/privacy">Privacy policy</a></footer></main>
-<script type="module" src="/review/tool.js"></script></body></html>
+<script type="module" src="/review/tool.js"></script><!-- ez-plans --></body></html>

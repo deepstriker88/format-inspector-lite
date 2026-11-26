@@ -34,7 +34,7 @@ try{
   assert.ok(home.width<=width&&home.height<=height+1,"direct home overflow "+JSON.stringify(home));
   assert.ok(home.primaryBottom<=height&&home.reviewBottom<=height&&home.planBottom<=height,"home action not visible");
   assert.ok(home.buttonHeight>=44&&home.inputSize>=16);
-  const allowedHome=new Set(["/","/try/style.css","/try/tool.js","/try/core.js","/try/strict-json.js","/try/csv.js","/try/convert.js","/favicon.ico"]);
+  const allowedHome=new Set(["/plans-ui.js","/","/try/style.css","/try/tool.js","/try/core.js","/try/strict-json.js","/try/csv.js","/try/convert.js","/favicon.ico"]);
   assert.ok(requests.every(([method,url])=>method==="GET"&&allowedHome.has(url)),"unexpected home request "+JSON.stringify(requests));
   const footprint=await page.evaluate(()=>[...performance.getEntriesByType("navigation"),...performance.getEntriesByType("resource")].reduce((n,e)=>n+(e.decodedBodySize||0),0));
   assert.ok(footprint>0&&footprint<=49152,"local tool resource budget exceeded: "+footprint);
@@ -64,9 +64,11 @@ try{
   await page.locator("#value-file").setInputFiles({name:"replacement.json",mimeType:"application/json",buffer:Buffer.from("[]")});
   assert.equal(await page.locator("#value").inputValue(),preserved);
   await page.locator("#clear").click();
+  assert.ok(!requests.some(([,url])=>url==="/try/convert.js"),"converter loaded before use");
   await page.locator("#mode").selectOption("csv_to_json");
   await page.locator("#example").click();
-  assert.equal(await page.locator("#status").getAttribute("data-state"),"pass");
+  await page.waitForFunction(()=>document.getElementById("status").dataset.state==="pass");
+  assert.equal(requests.filter(([method,url])=>method==="GET"&&url==="/try/convert.js").length,1);
   assert.deepEqual(JSON.parse(await page.locator("#result").textContent()),[{sku:"0042",qty:"7"}]);
   const download=page.waitForEvent("download");await page.locator("#save-conversion").click();
   const file=await download;assert.equal(file.suggestedFilename(),"converted-records.json");
@@ -87,8 +89,12 @@ try{
   assert.ok(await page.locator("#copy-result").isDisabled());
   assert.ok(await page.locator("#result-panel").isHidden());
   assert.equal(posts.length,0);assert.equal(external.length,0);
+  const beforePlans=page.url(),beforeValue=await page.locator("#value").inputValue(),beforeRequests=requests.length;
   await page.locator("#api-plans").click();
-  await page.waitForURL("**/api#plans");
+  assert.ok(await page.locator("#ez-plans").isVisible());
+  assert.equal(page.url(),beforePlans);assert.equal(requests.length,beforeRequests);
+  await page.keyboard.press("Escape");assert.equal(await page.locator("#value").inputValue(),beforeValue);
+  await page.goto(base+"/api#plans");
   await page.waitForFunction(()=>document.getElementById("plan-status").textContent.includes("no real payment"));
   assert.ok(await page.locator("#plans").evaluate(e=>e.open));
   assert.equal(await page.locator(".buy:disabled").count(),2);

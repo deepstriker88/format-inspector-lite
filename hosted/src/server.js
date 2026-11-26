@@ -1,3 +1,4 @@
+import {renderPlans} from "./plans-ui.js";
 import {initRecovery,createRecovery} from "./key-recovery.js";
 import {renderSupport} from "./support.js";
 import {bindBillingContext} from "./billing-context.js";
@@ -277,7 +278,7 @@ function serveStatic(res, filename, contentType = "text/html; charset=utf-8", he
   try {
     const raw = fs.readFileSync(full);
     const body = ["index.html","try.html","api.html","review.html","automation.html"].includes(filename)
-      ? Buffer.from(renderSupport(raw.toString("utf8"), process.env.BUY_ME_A_COFFEE_USERNAME, process.env[config.paddleEnv === "live" ? "PADDLE_PORTAL_LIVE_URL" : "PADDLE_PORTAL_SANDBOX_URL"], config.paddleEnv))
+      ? Buffer.from(renderSupport(renderPlans(raw.toString("utf8"),{mode:config.paddleEnv,ready:Boolean(config.paddleClientToken&&config.proPriceId&&config.teamPriceId&&config.paddleWebhookSecret),proPrice:config.proMonthlyUsd,teamPrice:config.teamMonthlyUsd,proLimit:planLimits.pro,teamLimit:planLimits.team}), process.env.BUY_ME_A_COFFEE_USERNAME, process.env[config.paddleEnv === "live" ? "PADDLE_PORTAL_LIVE_URL" : "PADDLE_PORTAL_SANDBOX_URL"], config.paddleEnv))
       : raw;
     res.writeHead(200, {
       "content-type": contentType,
@@ -750,6 +751,8 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
       return serveStatic(res, "key-backup.html", undefined, headOnly);
     }
     if (isStaticRead && route === "/key-backup.js") return serveStatic(res, "key-backup.js", "text/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/plans-ui.js") return serveStatic(res,"plans-ui.js","text/javascript; charset=utf-8",headOnly);
+    if (isStaticRead && route === "/legal.css") return serveStatic(res,"legal.css","text/css; charset=utf-8",headOnly);
     if (isStaticRead && route === "/key-backup.css") return serveStatic(res, "key-backup.css", "text/css; charset=utf-8", headOnly);
     if (isStaticRead && route === "/automation") return serveStatic(res, "automation.html", undefined, headOnly);
     if (isStaticRead && route === "/automation.mjs") return serveStatic(res, "automation.mjs", "application/javascript; charset=utf-8", headOnly);
