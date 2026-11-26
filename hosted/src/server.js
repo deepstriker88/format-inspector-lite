@@ -1,3 +1,4 @@
+import {initRecovery,createRecovery} from "./key-recovery.js";
 import {renderSupport} from "./support.js";
 import {bindBillingContext} from "./billing-context.js";
 import http from "node:http";
@@ -120,6 +121,9 @@ CREATE TABLE IF NOT EXISTS subscription_states (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_activation_transaction
   ON activations(paddle_transaction_id) WHERE paddle_transaction_id IS NOT NULL;
 `);
+
+initRecovery(db);
+const recovery=createRecovery(db,{product:"fil",mode:config.paddleEnv});
 
 function nowSeconds() {
   return Math.floor(Date.now() / 1000);
@@ -546,6 +550,18 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
       });
     }
 
+    if (req.method === "GET" && route === "/billing/recovery-config") {
+      return json(res,200,{keyPrefix:recovery.keyPrefix,codePrefix:recovery.codePrefix});
+    }
+    if (req.method === "POST" && ["/billing/recovery/enroll","/billing/recovery/rotate"].includes(route)) {
+      if(!allowRateLimit("recovery",sha256(clientIp(req)),10)||!allowRateLimit("recovery-peer",req.socket.remoteAddress||"unknown",100))
+        return json(res,429,{error:"rate_limit_reached"});
+      if(!String(req.headers["content-type"]||"").toLowerCase().startsWith("application/json"))
+        return json(res,415,{error:"json_required"});
+      const body=await readJson(req,4096);
+      const result=route.endsWith("/enroll")?recovery.enroll(apiKeyFromRequest(req),body.newCode):recovery.rotate(body.code,body.newKey,body.newCode);
+      return json(res,result.status,result.ok?{ok:true}:{error:result.error});
+    }
     if (req.method === "POST" && route === "/billing/activation") {
       const ipHash = sha256(clientIp(req));
       if (!allowRateLimit("activation", ipHash, 10)) {
@@ -722,6 +738,12 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
     if (isStaticRead && route === "/privacy") return serveStatic(res, "privacy.html", undefined, headOnly);
     if (isStaticRead && route === "/refund") return serveStatic(res, "refund.html", undefined, headOnly);
     if (isStaticRead && route === "/api") return serveStatic(res, "api.html", undefined, headOnly);
+    if (isStaticRead && route === "/key-recovery") {
+      res.setHeader("content-security-policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'");
+      res.setHeader("referrer-policy","no-referrer");
+      return serveStatic(res,"key-recovery.html",undefined,headOnly);
+    }
+    if (isStaticRead && route === "/key-recovery.js") return serveStatic(res,"key-recovery.js","text/javascript; charset=utf-8",headOnly);
     if (isStaticRead && route === "/key-backup") {
       res.setHeader("content-security-policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'");
       res.setHeader("referrer-policy", "no-referrer");

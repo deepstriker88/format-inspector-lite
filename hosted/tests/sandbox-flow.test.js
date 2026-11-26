@@ -212,6 +212,24 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal(usage.body.used,1);
     assert.equal(usage.body.plan,"pro");
 
+    const recoveryConfig = await request("/billing/recovery-config");
+    assert.equal(recoveryConfig.body.keyPrefix, "fil_test_");
+    const fresh = prefix => prefix + crypto.randomBytes(32).toString("base64url");
+    const recoveryCode = fresh(recoveryConfig.body.codePrefix);
+    const replacementKey = fresh(recoveryConfig.body.keyPrefix);
+    const replacementCode = fresh(recoveryConfig.body.codePrefix);
+    assert.equal((await request("/billing/recovery/enroll",{newCode:recoveryCode})).status,401);
+    assert.equal((await request("/billing/recovery/enroll",{newCode:recoveryCode},token)).status,200);
+    assert.equal((await request("/billing/recovery/enroll",{newCode:replacementCode},token)).status,409);
+    assert.equal((await request("/billing/recovery/rotate",{code:fresh(recoveryConfig.body.codePrefix),newKey:replacementKey,newCode:replacementCode})).status,401);
+    const replacements=await Promise.all([1,2].map(()=>request("/billing/recovery/rotate",{code:recoveryCode,newKey:replacementKey,newCode:replacementCode})));
+    assert.deepEqual(replacements.map(x=>x.status).sort(),[200,401]);
+    assert.equal((await request("/v1/usage",undefined,token)).status,401);
+    token.authorization="Bearer "+replacementKey;
+    assert.equal((await request("/v1/usage",undefined,token)).body.used,usage.body.used);
+    assert.equal((await request("/v1/usage",undefined,token)).body.plan,usage.body.plan);
+    assert.equal((await request("/billing/claim",{activationId,claimSecret})).status,410);
+
     const teamChange = await webhook("subscription.updated","evt_team_not_paid",{
       id:"sub_isolated", status:"active",
       items:[{price:{id:"pri_test_team"},quantity:1}],
@@ -233,6 +251,7 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
       id:"sub_isolated", status:"canceled",
     }, new Date(Date.now()+1000).toISOString());
     assert.equal(canceled.status,200);
+    assert.equal((await request("/billing/recovery/rotate",{code:replacementCode,newKey:fresh(recoveryConfig.body.keyPrefix),newCode:fresh(recoveryConfig.body.codePrefix)})).status,401);
     const denied = await request("/v1/inspect",{format:"email",value:"user@example.com"}, token);
     assert.equal(denied.status,403);
     assert.equal(denied.body.error,"api_key_inactive");
