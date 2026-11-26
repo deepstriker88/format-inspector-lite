@@ -74,3 +74,6 @@ https://www.sqlite.org/lang_vacuum.html
 ## Optional voluntary support
 
 Set BUY_ME_A_COFFEE_USERNAME in the deployment .env only after the owner has confirmed the actual recipient page and enabled payouts. The server renders a plain Buy me a coffee link in the legal/support area; it is absent when the setting is empty or malformed. No new external requests, tracking scripts, subscription changes, API calls or credentials. The customer leaves the site only after clicking. This is voluntary support, not a purchase or entitlement.
+
+## Shared commerce kit
+Set only the verified public login URL in PADDLE_PORTAL_SANDBOX_URL or PADDLE_PORTAL_LIVE_URL. The environment-specific link is hidden if absent or invalid. Never use temporary session URLs. /key-backup provides client-side AES-GCM encrypted backup of an existing key, portable between browsers/domains with the file and passphrase. No server upload, reissue, entitlement activation or lost-purchase authentication. See the canonical private Factory templates/commerce-kit.
