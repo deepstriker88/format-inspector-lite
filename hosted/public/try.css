@@ -1,5 +1,5 @@
 /* EZTOOLGO / task-first v2. Original CSS; no external font or graphic assets. */
-:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--ink:#202530;--muted:#525b69;--line:#d7dce3;--control:#788496;--accent:#354c86;--hover:#253968;--pass:#23664d;--error:#a32b36;--space:8px;font:16px/1.5 system-ui,sans-serif}
+:root{color-scheme:light;--bg:#f6f7f9;--surface:#fff;--ink:#182230;--muted:#4b596c;--line:#d9e0e8;--control:#68778b;--accent:#2355a6;--hover:#173e80;--pass:#176345;--error:#a62c39;--space:8px;font:16px/1.5 system-ui,sans-serif}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);min-width:0}
 [hidden]{display:none!important}
@@ -56,16 +56,8 @@ main>section.panel:not(.cli-panel){padding:12px 16px}
 main>section.panel h2{font-size:16px;margin:0 0 4px}
 footer{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:16px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
 footer a{display:inline-flex;align-items:center;min-height:44px}
-.input-field{border-top:1px solid var(--line);padding:8px 0}
-.input-field label{margin:0 0 4px}.input-field textarea{min-height:88px}
-.limit{margin:0 0 4px!important}.file-label{font-size:14px;margin-top:8px!important}
 input[type=file]{font:inherit;max-width:100%;width:100%;min-width:0;color:var(--ink)}
 input[type=file]::file-selector-button{min-height:44px;border:1px solid var(--control);border-radius:8px;background:var(--surface);color:var(--accent);font:inherit;padding:6px 12px;margin-right:8px;cursor:pointer}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(132px,100%),1fr));gap:8px;margin:12px 0}
-.metric{padding:8px 12px;border-left:1px solid var(--line);overflow-wrap:anywhere}
-.metric strong{display:block;font-size:24px;line-height:1.2}.metric span{font-size:14px;color:var(--muted)}
-#findings h3{margin:16px 0 4px}#findings ul{padding-left:20px}#findings li{overflow-wrap:anywhere;margin:6px 0}
-.cli-panel pre{max-height:none}
 @media(max-width:760px){main{width:calc(100% - 32px)}header{margin:12px 0}h1{font-size:26px}.workspace{grid-template-columns:minmax(0,1fr);gap:12px}.panel{padding:12px 16px}}
 
 /* Direct task entry: all input is local; plans are a separate document. */
@@ -112,7 +104,7 @@ input[type=file]::file-selector-button{min-height:44px;border:1px solid var(--co
 @media(max-width:400px){.quick .brand-full{display:none}.quick .brand-short{display:inline}.quick nav{gap:4px;flex-wrap:nowrap}.quick .nav-actions{gap:8px;flex-wrap:nowrap}.quick .nav-actions a{white-space:nowrap}.quick .product-name{font-size:14px}.quick .actions{grid-template-columns:minmax(0,1fr) auto auto}.quick .actions button{padding-inline:6px}}
 
 /* Task workspace v3: native controls, system fonts, no additional requests. */
-:root{--bg:#f6f7f9;--surface:#fff;--ink:#182230;--muted:#4b596c;--line:#d9e0e8;--control:#68778b;--accent:#2355a6;--hover:#173e80;--pass:#176345;--error:#a62c39}
+
 .quick .nav-actions a{min-height:44px}
 .quick .file-open{white-space:nowrap;flex-shrink:0}
 .quick .field-heading label{min-width:0;overflow-wrap:anywhere}
