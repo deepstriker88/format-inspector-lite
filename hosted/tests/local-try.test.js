@@ -14,7 +14,10 @@ test('browser module uses original core; no input transport; bounds',async()=>{
  await writeFile(path.join(dir,'core.js'),await readFile(new URL('../../src/index.js',import.meta.url)));
  await writeFile(path.join(dir,'strict-json.js'),await readFile(new URL('../../src/strict-json.js',import.meta.url)));
  await writeFile(path.join(dir,'csv.js'),await readFile(new URL('../../src/csv.js',import.meta.url)));
+ await writeFile(path.join(dir,'convert.js'),await readFile(new URL('../../src/convert.js',import.meta.url)));
  const {check,readLocalText}=await import(pathToFileURL(path.join(dir,'tool.js')));
+ assert.deepEqual(JSON.parse(check({mode:'csv_to_json',value:'sku,qty\n0042,7',profile:'[\"qty\"]'}).text),[{sku:'0042',qty:7}]);
+ assert.equal(check({mode:'json_to_csv',value:'[{\"sku\":\"0042\"}]'}).text,'\"sku\"\r\n\"0042\"\r\n');
  assert.equal(check({mode:'single',format:'email',value:'user@example.com'}).valid,true);
   assert.equal(check({mode:'single',format:'ipv4',value:'999.1.1.1'}).valid,false);
   assert.equal(check({mode:'csv',value:'format,value\nemail,user@example.com'})[0].valid,true);

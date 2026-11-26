@@ -1,3 +1,7 @@
+import {initAdjustments,createAdjustments} from "./billing-adjustments.js";
+import {renderPlans} from "./plans-ui.js";
+import {initRecovery,createRecovery} from "./key-recovery.js";
+import {renderSupport} from "./support.js";
 import {bindBillingContext} from "./billing-context.js";
 import http from "node:http";
 import fs from "node:fs";
@@ -119,6 +123,11 @@ CREATE TABLE IF NOT EXISTS subscription_states (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_activation_transaction
   ON activations(paddle_transaction_id) WHERE paddle_transaction_id IS NOT NULL;
 `);
+
+initAdjustments(db);
+const adjustments=createAdjustments(db);
+initRecovery(db);
+const recovery=createRecovery(db,{product:"fil",mode:config.paddleEnv,isBlocked:adjustments.isBlocked});
 
 function nowSeconds() {
   return Math.floor(Date.now() / 1000);
@@ -245,11 +254,12 @@ function apiKeyFromRequest(req) {
 
 function findApiKey(rawKey) {
   if (!rawKey || !rawKey.startsWith(config.paddleEnv==="live"?"fil_live_":"fil_test_") || !/^[A-Za-z0-9_-]{1,128}$/.test(rawKey)) return null;
-  return db.prepare(`
+  const key=db.prepare(`
     SELECT id, email, plan, status, key_prefix, paddle_subscription_id
       FROM api_keys
      WHERE key_hash = ?
   `).get(sha256(rawKey)) || null;
+  return key && adjustments.isBlocked(key.id) ? {...key,status:"suspended"} : key;
 }
 
 function recordUsage(keyId, limit) {
@@ -270,7 +280,10 @@ function recordUsage(keyId, limit) {
 function serveStatic(res, filename, contentType = "text/html; charset=utf-8", headOnly = false) {
   const full = path.join(PUBLIC_DIR, filename);
   try {
-    const body = fs.readFileSync(full);
+    const raw = fs.readFileSync(full);
+    const body = ["index.html","try.html","api.html","review.html","automation.html"].includes(filename)
+      ? Buffer.from(renderSupport(renderPlans(raw.toString("utf8"),{mode:config.paddleEnv,ready:Boolean(config.paddleClientToken&&config.proPriceId&&config.teamPriceId&&config.paddleWebhookSecret),proPrice:config.proMonthlyUsd,teamPrice:config.teamMonthlyUsd,proLimit:planLimits.pro,teamLimit:planLimits.team}), process.env.BUY_ME_A_COFFEE_USERNAME, process.env[config.paddleEnv === "live" ? "PADDLE_PORTAL_LIVE_URL" : "PADDLE_PORTAL_SANDBOX_URL"], config.paddleEnv))
+      : raw;
     res.writeHead(200, {
       "content-type": contentType,
       "content-length": body.length,
@@ -384,8 +397,8 @@ function applyVerifiedPaidUpgrade(data, plan) {
   if (!state || state.status !== "active" || state.plan !== "team") return false;
   const result = db.prepare(
     "UPDATE api_keys SET plan='team',updated_at=? " +
-    "WHERE paddle_subscription_id=? AND status='active' AND plan='pro'"
-  ).run(nowSeconds(), subscriptionId);
+    "WHERE paddle_subscription_id=? AND paddle_customer_id=? AND status='active' AND plan='pro'"
+  ).run(nowSeconds(), subscriptionId, data.customer_id);
   return Number(result.changes) > 0;
 }
 
@@ -542,6 +555,18 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
       });
     }
 
+    if (req.method === "GET" && route === "/billing/recovery-config") {
+      return json(res,200,{keyPrefix:recovery.keyPrefix,codePrefix:recovery.codePrefix});
+    }
+    if (req.method === "POST" && ["/billing/recovery/enroll","/billing/recovery/rotate"].includes(route)) {
+      if(!allowRateLimit("recovery",sha256(clientIp(req)),10)||!allowRateLimit("recovery-peer",req.socket.remoteAddress||"unknown",100))
+        return json(res,429,{error:"rate_limit_reached"});
+      if(!String(req.headers["content-type"]||"").toLowerCase().startsWith("application/json"))
+        return json(res,415,{error:"json_required"});
+      const body=await readJson(req,4096);
+      const result=route.endsWith("/enroll")?recovery.enroll(apiKeyFromRequest(req),body.newCode):recovery.rotate(body.code,body.newKey,body.newCode);
+      return json(res,result.status,result.ok?{ok:true}:{error:result.error});
+    }
     if (req.method === "POST" && route === "/billing/activation") {
       const ipHash = sha256(clientIp(req));
       if (!allowRateLimit("activation", ipHash, 10)) {
@@ -596,6 +621,7 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
       }
       const key = db.prepare("SELECT plan,status FROM api_keys WHERE id=?")
         .get(activation.api_key_id);
+      if(adjustments.isBlocked(activation.api_key_id))return json(res,403,{error:"payment_adjustment_hold"});
       const apiKey = activation.api_key_plain;
       db.prepare(
         "UPDATE activations SET api_key_plain=NULL WHERE id=?"
@@ -637,7 +663,10 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
         if (plan) {
           if (typeof activationId === "string") provisionActivation(activationId, plan, data);
           applyVerifiedPaidUpgrade(data, plan);
+          adjustments.recordPaid(data,event.occurred_at,plan);
         }
+      } else if(eventType==="adjustment.created"||eventType==="adjustment.updated"){
+        adjustments.recordAdjustment(data,event.occurred_at);
       } else if (
         eventType === "subscription.created" ||
         eventType === "subscription.activated" ||
@@ -709,6 +738,7 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
     if (isStaticRead && route === "/try/core.js") return serveStatic(res, "../../src/index.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/try/strict-json.js") return serveStatic(res, "../../src/strict-json.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/try/csv.js") return serveStatic(res, "../../src/csv.js", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/try/convert.js") return serveStatic(res, "../../src/convert.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/landing-example.js") return serveStatic(res, "landing-example.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/app.js") {
       return serveStatic(res, "app.js", "application/javascript; charset=utf-8", headOnly);
@@ -717,6 +747,24 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
     if (isStaticRead && route === "/privacy") return serveStatic(res, "privacy.html", undefined, headOnly);
     if (isStaticRead && route === "/refund") return serveStatic(res, "refund.html", undefined, headOnly);
     if (isStaticRead && route === "/api") return serveStatic(res, "api.html", undefined, headOnly);
+    if (isStaticRead && route === "/key-recovery") {
+      res.setHeader("content-security-policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'");
+      res.setHeader("referrer-policy","no-referrer");
+      return serveStatic(res,"key-recovery.html",undefined,headOnly);
+    }
+    if (isStaticRead && route === "/key-recovery.js") return serveStatic(res,"key-recovery.js","text/javascript; charset=utf-8",headOnly);
+    if (isStaticRead && route === "/key-backup") {
+      res.setHeader("content-security-policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'");
+      res.setHeader("referrer-policy", "no-referrer");
+      return serveStatic(res, "key-backup.html", undefined, headOnly);
+    }
+    if (isStaticRead && route === "/key-backup.js") return serveStatic(res, "key-backup.js", "text/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/plans-ui.js") return serveStatic(res,"plans-ui.js","text/javascript; charset=utf-8",headOnly);
+    if (isStaticRead && route === "/legal.css") return serveStatic(res,"legal.css","text/css; charset=utf-8",headOnly);
+    if (isStaticRead && route === "/key-backup.css") return serveStatic(res, "key-backup.css", "text/css; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/automation") return serveStatic(res, "automation.html", undefined, headOnly);
+    if (isStaticRead && route === "/automation.mjs") return serveStatic(res, "automation.mjs", "application/javascript; charset=utf-8", headOnly);
+    if (isStaticRead && route === "/automation-example.json") return serveStatic(res, "automation-example.json", "application/json; charset=utf-8", headOnly);
 
     return json(res, 404, { error: "not_found" });
   } catch (error) {

@@ -132,3 +132,43 @@ Blank optional cells skip format/unique checks; uniqueness otherwise compares ex
 strings. UTF-8 CSV only, not TSV/XLSX. No network, account or database required.
 This does not verify data authenticity or guarantee successful downstream import.
 This source includes the feature. Check the npm registry for the published version before installation; a staging placeholder is not a usable release.
+
+
+## Local record conversion (review candidate, not yet published)
+
+The browser input selector offers CSV → JSON and JSON → CSV conversion without
+a new service or request. CSV values remain exact strings by default, including
+leading zeros, empty fields, Unicode and quoted multiline values. Optional JSON
+integer-column list (for example `["qty"]`) converts only canonical safe integer
+cells. Headers must be unique, nonblank and free of blocked prototype keys.
+
+For JSON → CSV, exact matching text columns are the default. An optional ordered
+field map such as `[["ID","/id"],["Team","/team/name"]]` selects nested fields by
+JSON Pointer; explicitly selected booleans and safe integer values can also be
+exported. Numeric JSON tokens must be canonical safe integers (including
+unselected numbers); decimal/exponent spellings and negative zero are refused
+rather than rounded. Null and nested values cannot be written as cells. CSV
+output is fully quoted with CRLF, and formula-like text prefixes are refused.
+This does not guarantee safe spreadsheet behavior: import columns as text,
+especially identifiers with leading zeros. The output contains the input data
+and must be reviewed before sharing; copy-summary excludes those values.
+
+Limits: UTF-8 text 64 KiB, 100 data rows, 32 columns, 4 KiB optional profile,
+256 KiB output. No automatic type guessing, upload, persistence or new runtime
+dependency. The published package/version and managed API behavior are unchanged
+until a separate release review.
+
+
+### Optional managed automation runner (next hosted release)
+
+Validate a list of typed values before import. Reports record numbers and verdicts, not original values.
+
+Download the runner and synthetic input from /automation. Run node automation.mjs automation-example.json locally to preview the call count; pass --send with EZTOOLGO_API_KEY configured to submit checks to the existing managed API. No subscription price, authentication, entitlement, or billing changes. The runner does not persist user input or keys and outputs a redacted release verdict. Default 100 calls, explicit maximum 500. No automatic retries. Review candidate; not deployed.
+
+The CSV columns mode checks ordinary spreadsheet exports without reshaping them to format/value pairs. Read headers, select 1–20 formats, inspect row-level findings, and optionally export up to 500 selected cell checks to the automation runner.
+
+<!-- eztoolgo-voluntary-support:start -->
+## Support development
+
+If this tool saves you time, you can [buy me a coffee](https://buymeacoffee.com/eztoolgo). Voluntary support does not unlock features or purchase service access.
+<!-- eztoolgo-voluntary-support:end -->

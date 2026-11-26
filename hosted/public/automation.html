@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>Bulk data import gate</title><link rel="stylesheet" href="/review/style.css"></head><body><main class="review-page automation-page"><nav><a href="/">← Product</a><a href="/api#plans">API plans</a></nav><header><h1>Bulk data import gate</h1><p>Validate a list of typed values before import. Reports record numbers and verdicts, not original values.</p></header><section class="panel"><h2>Run in your existing CI</h2><p>No extra framework or service to install. Node.js 20+ and an optional managed API key.</p><div class="actions"><a class="btn" href="/automation.mjs" download>Download automation runner</a><a class="btn secondary" href="/automation-example.json" download>Download example input</a></div><h3>1. Preview the check count (free, no connection)</h3><pre>node automation.mjs automation-example.json</pre><h3>2. Run with your subscribed API key</h3><p>Set EZTOOLGO_API_KEY in your CI secret settings. Only use inputs you are authorized to send. The following command sends the input to this product API and consumes existing monthly quota. It will not fetch any destination URL.</p><pre>node automation.mjs automation-example.json --send &gt; review-report.json</pre><p>Exit 0 = preview or pass, 1 = finding, 2 = incomplete or unavailable. Default maximum 100 checks, optionally set --max-checks up to 500. Quota checked before sending; no automatic retries. A connection failure may still consume one call. Reports omit raw values and keys.</p><details><summary>GitHub Actions step</summary><pre>      - name: Release gate
+        env:
+          EZTOOLGO_API_KEY: ${{ secrets.EZTOOLGO_API_KEY }}
+        run: node automation.mjs automation-example.json --send &gt; review-report.json</pre><p>Commit the reviewed runner and your authorized input to your own repository. Do not commit keys or private fixtures.</p></details><details><summary>Input example (synthetic)</summary><pre>{
+  &quot;records&quot;: [
+    {
+      &quot;format&quot;: &quot;email&quot;,
+      &quot;value&quot;: &quot;user@example.com&quot;
+    },
+    {
+      &quot;format&quot;: &quot;ipv4&quot;,
+      &quot;value&quot;: &quot;999.1.2.3&quot;
+    }
+  ]
+}</pre></details><p class="note">No additional payment is initiated by this runner. Existing subscription rules apply. Managed service availability is subject to provider approval and deployment. Free browser tools remain free.</p><a class="btn secondary" href="/api#plans">View managed API plans</a><p><!-- optional-support --></p></section></main><!-- ez-plans --></body></html>

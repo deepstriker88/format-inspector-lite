@@ -1,5 +1,5 @@
 // Bounded JSON parsing for explicit review inputs; reject ambiguous keys.
-export function strictJson(text,{maxBytes=1048576,maxDepth=64,maxNodes=100000}={}){
+export function strictJson(text,{maxBytes=1048576,maxDepth=64,maxNodes=100000,integerLexemesOnly=false}={}){
   if(typeof text!=="string"||text.length>maxBytes||new TextEncoder().encode(text).length>maxBytes)throw new RangeError("JSON input too large");
   let i=0,nodes=0;
   const ws=()=>{while(i<text.length&&/[\t\n\r ]/.test(text[i]))i++;};
@@ -37,7 +37,9 @@ export function strictJson(text,{maxBytes=1048576,maxDepth=64,maxNodes=100000}={
     const start=i;
     while(i<text.length&&!/[\t\n\r ,}\]]/.test(text[i]))i++;
     if(i===start)invalid();
-    const scalar=JSON.parse(text.slice(start,i));
+    const lexeme=text.slice(start,i);
+    const scalar=JSON.parse(lexeme);
+    if(integerLexemesOnly&&typeof scalar==='number'&&(!/^-?(?:0|[1-9][0-9]*)$/.test(lexeme)||lexeme==='-0'||!Number.isSafeInteger(scalar)))throw new RangeError('Canonical safe integer required');
     if(typeof scalar==='number'&&!Number.isFinite(scalar))throw new RangeError('Non-finite JSON number');
     if(scalar!==null&&typeof scalar==='object')invalid();
   }

@@ -34,7 +34,7 @@ try{
   assert.ok(home.width<=width&&home.height<=height+1,"direct home overflow "+JSON.stringify(home));
   assert.ok(home.primaryBottom<=height&&home.reviewBottom<=height&&home.planBottom<=height,"home action not visible");
   assert.ok(home.buttonHeight>=44&&home.inputSize>=16);
-  const allowedHome=new Set(["/","/try/style.css","/try/tool.js","/try/core.js","/try/strict-json.js","/try/csv.js","/favicon.ico"]);
+  const allowedHome=new Set(["/plans-ui.js","/","/try/style.css","/try/tool.js","/try/core.js","/try/strict-json.js","/try/csv.js","/try/convert.js","/favicon.ico"]);
   assert.ok(requests.every(([method,url])=>method==="GET"&&allowedHome.has(url)),"unexpected home request "+JSON.stringify(requests));
   const footprint=await page.evaluate(()=>[...performance.getEntriesByType("navigation"),...performance.getEntriesByType("resource")].reduce((n,e)=>n+(e.decodedBodySize||0),0));
   assert.ok(footprint>0&&footprint<=49152,"local tool resource budget exceeded: "+footprint);
@@ -63,13 +63,38 @@ try{
   page.once("dialog",d=>d.dismiss());
   await page.locator("#value-file").setInputFiles({name:"replacement.json",mimeType:"application/json",buffer:Buffer.from("[]")});
   assert.equal(await page.locator("#value").inputValue(),preserved);
+  await page.locator("#clear").click();
+  assert.ok(!requests.some(([,url])=>url==="/try/convert.js"),"converter loaded before use");
+  await page.locator("#mode").selectOption("csv_to_json");
+  await page.locator("#example").click();
+  await page.waitForFunction(()=>document.getElementById("status").dataset.state==="pass");
+  assert.equal(requests.filter(([method,url])=>method==="GET"&&url==="/try/convert.js").length,1);
+  assert.deepEqual(JSON.parse(await page.locator("#result").textContent()),[{sku:"0042",qty:"7"}]);
+  const download=page.waitForEvent("download");await page.locator("#save-conversion").click();
+  const file=await download;assert.equal(file.suggestedFilename(),"converted-records.json");
+  await file.saveAs(path.join(dir,"conversion.json"));assert.deepEqual(JSON.parse(await fs.readFile(path.join(dir,"conversion.json"),"utf8")),[{sku:"0042",qty:"7"}]);
+  await page.locator("#mode").selectOption("json_to_csv");
+  assert.ok(await page.locator("#save-conversion").isHidden());
+  await page.locator("#value").fill('[{"a":"=1+1"}]');await page.locator("#run").click();
+  assert.equal(await page.locator("#status").getAttribute("data-state"),"fail");
+  assert.ok(await page.locator("#save-conversion").isHidden());
+  await page.locator("#value").fill('[{"sku":"0042"}]');await page.locator("#run").click();
+  assert.equal(await page.locator("#status").getAttribute("data-state"),"pass");
+  assert.equal(await page.locator("#result").textContent(),'"sku"\r\n"0042"\r\n');
+  const layout=await page.evaluate(()=>document.documentElement.scrollWidth);
+  assert.ok(layout<=width);await page.screenshot({path:"qa-screenshots/record-conversion.png",fullPage:true});
+  await page.locator("#mode").selectOption("single");
   }
   await page.locator("#value").fill("PRIVATE_TEST_VALUE");
   assert.ok(await page.locator("#copy-result").isDisabled());
   assert.ok(await page.locator("#result-panel").isHidden());
   assert.equal(posts.length,0);assert.equal(external.length,0);
+  const beforePlans=page.url(),beforeValue=await page.locator("#value").inputValue(),beforeRequests=requests.length;
   await page.locator("#api-plans").click();
-  await page.waitForURL("**/api#plans");
+  assert.ok(await page.locator("#ez-plans").isVisible());
+  assert.equal(page.url(),beforePlans);assert.equal(requests.length,beforeRequests);
+  await page.keyboard.press("Escape");assert.equal(await page.locator("#value").inputValue(),beforeValue);
+  await page.goto(base+"/api#plans");
   await page.waitForFunction(()=>document.getElementById("plan-status").textContent.includes("no real payment"));
   assert.ok(await page.locator("#plans").evaluate(e=>e.open));
   assert.equal(await page.locator(".buy:disabled").count(),2);
@@ -114,6 +139,14 @@ try{
    assert.notEqual(await page.locator("#status").getAttribute("data-state"),"incomparable");
    assert.ok((await page.locator("#result").textContent()).length>2);
    if(width===390||width===1440)await page.screenshot({path:"qa-screenshots/"+route.slice(1)+"-"+width+"x"+height+".png",fullPage:true});
+   if(route==="/review"&&width===390){
+    await page.emulateMedia({colorScheme:"dark"});
+    assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).colorScheme),"dark");
+    const chooserPromise=page.waitForEvent("filechooser");await page.locator(".file-open").first().click();await chooserPromise;
+    assert.ok(await page.locator("#run").evaluate(e=>e.getBoundingClientRect().bottom<=innerHeight));
+    await page.screenshot({path:"qa-screenshots/review-dark.png",fullPage:true});
+    await page.emulateMedia({colorScheme:"light"});
+   }
    const input=page.locator("textarea").first();
    await input.fill("invalid fixture");
    assert.equal(await page.locator("#status").getAttribute("data-state"),"idle");

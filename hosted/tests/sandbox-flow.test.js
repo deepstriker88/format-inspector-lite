@@ -87,7 +87,7 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal(headers.headers.get("strict-transport-security"), "max-age=86400");
     assert.equal(headers.headers.get("x-content-type-options"), "nosniff");
     assert.match(headers.headers.get("content-security-policy"), /style-src[^;]*https:\/\/sandbox-cdn\.paddle\.com/);
-    for (const route of ["/", "/api", "/review", "/review/style.css", "/review/tool.js", "/review/index.js", "/review/strict-json.js", "/review/contract.js", "/review/csv.js", "/try", "/try/style.css", "/try/tool.js", "/try/core.js", "/try/strict-json.js", "/try/csv.js", "/app.js", "/robots.txt", "/sitemap.xml", "/terms", "/privacy", "/refund"]) {
+    for (const route of ["/", "/api", "/review", "/review/style.css", "/review/tool.js", "/review/index.js", "/review/strict-json.js", "/review/contract.js", "/review/csv.js", "/try", "/try/style.css", "/try/tool.js", "/try/core.js", "/try/strict-json.js", "/try/csv.js", "/try/convert.js", "/app.js", "/robots.txt", "/sitemap.xml", "/terms", "/privacy", "/refund"]) {
       const head = await fetch(base + route, { method: "HEAD" });
       assert.equal(head.status, 200, "HEAD should succeed for " + route);
       assert.ok(Number(head.headers.get("content-length")) > 0, "HEAD should expose content-length for " + route);
@@ -212,6 +212,37 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal(usage.body.used,1);
     assert.equal(usage.body.plan,"pro");
 
+    const recoveryConfig = await request("/billing/recovery-config");
+    assert.equal(recoveryConfig.body.keyPrefix, "fil_test_");
+    const fresh = prefix => prefix + crypto.randomBytes(32).toString("base64url");
+    const recoveryCode = fresh(recoveryConfig.body.codePrefix);
+    const replacementKey = fresh(recoveryConfig.body.keyPrefix);
+    const replacementCode = fresh(recoveryConfig.body.codePrefix);
+    assert.equal((await request("/billing/recovery/enroll",{newCode:recoveryCode})).status,401);
+    assert.equal((await request("/billing/recovery/enroll",{newCode:recoveryCode},token)).status,200);
+    assert.equal((await request("/billing/recovery/enroll",{newCode:replacementCode},token)).status,409);
+    assert.equal((await request("/billing/recovery/rotate",{code:fresh(recoveryConfig.body.codePrefix),newKey:replacementKey,newCode:replacementCode})).status,401);
+    const replacements=await Promise.all([1,2].map(()=>request("/billing/recovery/rotate",{code:recoveryCode,newKey:replacementKey,newCode:replacementCode})));
+    assert.deepEqual(replacements.map(x=>x.status).sort(),[200,401]);
+    assert.equal((await request("/v1/usage",undefined,token)).status,401);
+    token.authorization="Bearer "+replacementKey;
+    assert.equal((await request("/v1/usage",undefined,token)).body.used,usage.body.used);
+    assert.equal((await request("/v1/usage",undefined,token)).body.plan,usage.body.plan);
+    assert.equal((await request("/billing/claim",{activationId,claimSecret})).status,410);
+
+    const adjustment={id:"adj_fixture",transaction_id:"txn_isolated",subscription_id:"sub_isolated",customer_id:"ctm_isolated",action:"refund",type:"full",status:"pending_approval"};
+    const adjustAt=n=>new Date(Date.now()+n).toISOString();
+    assert.equal((await webhook("adjustment.created","evt_refund_pending",adjustment,adjustAt(20))).status,200);
+    assert.equal((await request("/v1/usage",undefined,token)).body.status,"active");
+    assert.equal((await webhook("adjustment.updated","evt_refund_approved",{...adjustment,status:"approved"},adjustAt(40))).status,200);
+    assert.equal((await request("/v1/usage",undefined,token)).body.status,"suspended");
+    assert.equal((await request("/billing/recovery/rotate",{code:replacementCode,newKey:fresh(recoveryConfig.body.keyPrefix),newCode:fresh(recoveryConfig.body.codePrefix)})).status,401);
+    await webhook("adjustment.created","evt_refund_stale",adjustment,adjustAt(-1000));
+    assert.equal((await request("/v1/usage",undefined,token)).body.status,"suspended");
+    await webhook("transaction.completed","evt_renewal",{...purchase,id:"txn_renewal",origin:"subscription_recurring",custom_data:{}},adjustAt(1000));
+    assert.equal((await request("/v1/usage",undefined,token)).body.status,"active");
+    assert.equal((await request("/v1/usage",undefined,token)).body.used,usage.body.used);
+
     const teamChange = await webhook("subscription.updated","evt_team_not_paid",{
       id:"sub_isolated", status:"active",
       items:[{price:{id:"pri_test_team"},quantity:1}],
@@ -219,6 +250,12 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
     assert.equal(teamChange.status,200);
     const notUpgraded = await request("/v1/usage",undefined,token);
     assert.equal(notUpgraded.body.plan,"pro");
+
+    await webhook("transaction.completed","evt_wrong_customer_upgrade",{
+      ...purchase,id:"txn_wrong_customer",customer_id:"ctm_other",custom_data:{},origin:"subscription_update",
+      items:[{price:{id:"pri_test_team"},quantity:1}],details:{totals:{total:"999"}}
+    });
+    assert.equal((await request("/v1/usage",undefined,token)).body.plan,"pro");
 
     const teamPaid = await webhook("transaction.completed","evt_team_paid",{
       ...purchase, id:"txn_paid_upgrade", custom_data:{},
@@ -233,6 +270,7 @@ test("isolated sandbox flow: activate -> signed webhook -> one-time claim -> API
       id:"sub_isolated", status:"canceled",
     }, new Date(Date.now()+1000).toISOString());
     assert.equal(canceled.status,200);
+    assert.equal((await request("/billing/recovery/rotate",{code:replacementCode,newKey:fresh(recoveryConfig.body.keyPrefix),newCode:fresh(recoveryConfig.body.codePrefix)})).status,401);
     const denied = await request("/v1/inspect",{format:"email",value:"user@example.com"}, token);
     assert.equal(denied.status,403);
     assert.equal(denied.body.error,"api_key_inactive");
