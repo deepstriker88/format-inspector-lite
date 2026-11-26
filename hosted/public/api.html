@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Format Inspector Lite — free browser tool and optional API</title>
+<meta name="description" content="Check email, IP, UUID and other formats in text, CSV or JSON. Free local MIT package. No sign-up for browser checks.">
+<link rel="canonical" href="https://format-inspector.eztoolgo.duckdns.org/api"><meta name="robots" content="noindex,follow">
+<meta property="og:type" content="website"><meta property="og:title" content="Format Inspector Lite"><meta property="og:description" content="Check email, IP, UUID and other text formats. Audit CSV or JSON and compare deliveries with a reusable contract."><meta property="og:url" content="https://format-inspector.eztoolgo.duckdns.org/">
+<style>
+/* EZTOOLGO / task-first v2. Original CSS; no external font or graphic assets. */
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--ink:#202530;--muted:#525b69;--line:#d7dce3;--control:#788496;--accent:#354c86;--hover:#253968;--pass:#23664d;--error:#a32b36;--space:8px;font:16px/1.5 system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);min-width:0}
+[hidden]{display:none!important}
+a{color:var(--accent);text-underline-offset:3px}
+a:hover{color:var(--hover)}
+h1,h2,h3,p{margin:0}h1{font-weight:700;letter-spacing:-.025em;font-size:clamp(28px,3.5vw,44px);line-height:1.17}
+h2{font-weight:650;font-size:20px;line-height:1.3;letter-spacing:-.015em}
+h3{font-size:16px;font-weight:650;line-height:1.4}
+p,li{overflow-wrap:anywhere}
+button,input,select,textarea{font:inherit;color:inherit;min-width:0}
+button,.btn,.button-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid var(--accent);background:var(--accent);color:white;border-radius:8px;font-weight:650;line-height:1.25;text-decoration:none;text-align:center;cursor:pointer;touch-action:manipulation}
+button:not(:disabled):hover,.btn:hover,.button-link:hover{background:var(--hover);color:white}
+button.secondary,.btn.secondary,.button-link.secondary{background:var(--surface);color:var(--accent);border-color:var(--control)}
+button.secondary:not(:disabled):hover,.btn.secondary:hover,.button-link.secondary:hover{background:#edf0f5;color:var(--hover)}
+button:disabled{background:#e6e9ee;color:#697280;border-color:var(--line);cursor:not-allowed}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+textarea,select,input:not([type=checkbox]):not([type=file]){display:block;max-width:100%;width:100%;padding:10px 12px;border:1px solid var(--control);background:var(--surface);border-radius:8px;font-size:16px}
+select,input:not([type=checkbox]):not([type=file]){min-height:44px}
+textarea{resize:vertical;min-height:88px;max-height:360px;font-family:ui-monospace,monospace;line-height:1.5;overflow-wrap:anywhere}
+code,pre{font-family:ui-monospace,monospace;font-size:14px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:400px;overflow:auto;background:var(--bg);padding:12px;border-radius:8px;margin:8px 0}
+summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;font-weight:650}
+summary::after{content:"+";margin-left:auto}
+details[open]>summary::after{content:"−"}
+details{min-width:0}
+.note,.fine,.legal,.status,.billing-note,.subnote{color:var(--muted);font-size:14px;line-height:1.5}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+/* Landing: one primary action, one optional example, one secondary information row. */
+.shell,body>main,.topbar{width:min(100% - 40px,1040px);margin-inline:auto}
+.shell .topbar{width:100%}
+.topbar{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}
+.brand{font-size:16px;font-weight:700;color:var(--ink);text-decoration:none;min-width:0;display:flex;align-items:center;gap:8px;overflow-wrap:anywhere;line-height:1.3}
+.mark{background:var(--accent);color:white;display:grid;place-items:center;flex:none;width:28px;height:28px;font-size:15px;border-radius:6px}
+.nav{display:flex;align-items:center;gap:12px;flex:none}.nav a{font-size:14px;min-height:44px;display:flex;align-items:center}
+.nav button{padding:8px 12px}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:24px;align-items:start;padding:32px 0 16px}
+.hero>*{min-width:0}
+.copy,.hero-copy{display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-width:0}
+.eyebrow{color:var(--muted);font-weight:600;font-size:14px;line-height:1.4}
+.lead,.intro{font-size:16px;color:var(--muted);max-width:52ch}
+.actions,.action-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0;width:100%}
+.actions>a,.action-row>a{min-width:0;max-width:100%}
+.proof{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:13px;color:var(--muted)}
+.proof span{font-size:13px}
+.proof span+span::before{content:"·";margin-right:8px}
+.difference,.trust-proof,.copy>.fine{font-size:14px;color:var(--muted)}
+.panel,.sample{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:20px;min-width:0}
+.sample summary{padding:0;min-height:44px;align-items:center}.sample summary h2{font-size:18px}
+.sample-inner{display:grid;gap:12px;padding-top:8px}
+.sample-inner>button,.demo-controls button{background:white;color:var(--accent);border-color:var(--control)}
+.sample-inner>button:not(:disabled):hover,.demo-controls button:not(:disabled):hover{background:#edf0f5;color:var(--hover)}
+.sample-inner label{display:grid;gap:4px;font-size:14px;font-weight:600}
+.sample-output,.demo-summary{background:var(--bg);border-radius:8px;padding:12px;min-width:0;overflow-wrap:anywhere;font-size:15px}
+.sample-output[data-state=pass]{color:var(--pass)}.sample-output[data-state=fail]{color:var(--error)}
+.demo{display:block}.demo>summary h2{font-size:18px}
+.demo-head{display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:8px}
+.demo-head h2{font-size:18px}
+.demo-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px;min-width:0}
+.demo-controls textarea{min-height:44px;height:44px;resize:none;overflow:auto}
+.demo-controls button{min-width:0}
+.demo-technical summary{font-size:14px}
+.secondary-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;grid-column:1/-1;padding:0 0 12px}
+.secondary-actions button{background:transparent;color:var(--accent);border-color:transparent;font-size:14px;font-weight:600;padding:8px 12px;text-decoration:none}
+.secondary-actions button:hover{background:#e9edf4;color:var(--hover)}
+.feature-disclaimer{grid-column:1/-1}
+#purchase-status,#api-key-box{grid-column:1/-1}
+#api-key-box:empty{display:none}
+.footer,footer{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;padding:12px 0 16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.footer a,footer a{display:inline-flex;align-items:center;min-height:32px}
+.footer span,footer span{flex-basis:100%}
+.site-info{width:100%}.site-info summary{font-weight:500;color:var(--muted);font-size:14px}.site-info summary::after{margin-left:8px}.site-links{display:flex;flex-wrap:wrap;gap:4px 12px;padding:4px 0}.site-links span{flex-basis:100%;font-size:13px}.site-links a{min-height:44px}
+.detail-area{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 0 16px}
+.detail-area details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px}
+.detail-area p{margin:8px 0;font-size:14px;color:var(--muted)}
+.detail-wide{grid-column:1/-1}
+dialog{color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;width:min(680px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow:auto}
+dialog::backdrop{background:#20253066}
+.dialog-head,.dialog-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.dialog-head h2,.dialog-header h2{margin:6px 0}.dialog-head button,.dialog-header button{flex:none}
+dialog p{margin:8px 0}dialog label{display:grid;gap:6px;margin:12px 0;font-size:15px;font-weight:600}
+dialog label.check{display:flex;align-items:flex-start;gap:8px;font-weight:400}dialog input[type=checkbox]{flex:none;margin-top:5px;width:18px;height:18px}
+.pricing,.plan-grid{display:grid;gap:0;margin:16px 0}
+.plan{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.plan p{font-size:14px;color:var(--muted);margin:4px 0}
+.price{font-size:24px;line-height:1.25;font-weight:700;white-space:nowrap}.price small{font-size:13px;color:var(--muted);font-weight:400}
+.plan-actions{text-align:right;min-width:0}.plan-actions button{margin-top:4px}
+.modal-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:16px}
+.details-block{border-top:1px solid var(--line);padding:12px 0}.details-block p{font-size:15px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+@media(max-width:760px){
+ .shell,body>main,.topbar{width:calc(100% - 32px)}
+ .topbar{min-height:56px}.nav{gap:8px}.nav a{display:flex}
+ .hero{grid-template-columns:minmax(0,1fr);gap:12px;padding:16px 0 8px}
+ .copy,.hero-copy{gap:8px}.panel,.sample{padding:12px 16px}
+ .secondary-actions{padding-bottom:0}.detail-area{grid-template-columns:1fr}
+ .actions,.action-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .actions>a,.action-row>a{font-size:14px;padding:10px 12px}
+ .footer,footer{gap:4px 12px;padding:8px 0}
+}
+@media(max-width:400px){
+ .brand{font-size:14px}.nav button{font-size:14px}.mark{width:24px;height:24px}
+ h1{font-size:28px}.actions,.action-row{grid-template-columns:minmax(0,1fr)}
+ .hero{padding-top:12px;gap:8px}.copy,.hero-copy{gap:8px}.secondary-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.secondary-actions button{padding:8px 4px}.panel,.sample{padding:8px 12px}
+ .actions>a,.action-row>a{width:100%}
+ .demo-controls{grid-template-columns:minmax(0,1fr)}
+ .demo-controls textarea{width:100%;height:44px}.demo-controls button{width:100%}
+ dialog{padding:16px}.plan{gap:8px}.price{font-size:22px}
+}
+</style></head>
+<body><div class="shell">
+<header class="topbar"><a class="brand" href="/"><span class="mark" aria-hidden="true">F</span>Format Inspector Lite</a><nav class="nav" aria-label="Primary"><a href="https://github.com/deepstriker88/format-inspector-lite">Source</a></nav></header>
+<main><section class="hero" aria-labelledby="page-title"><div class="copy">
+<p class="eyebrow">Free · No sign-up</p>
+<h1 id="page-title">Check data formats</h1>
+<p class="lead">Check email, IP, UUID and other text formats. Audit CSV or JSON and compare deliveries with a reusable contract.</p>
+<div class="actions"><a class="btn" id="primary-try" href="/">Check my data</a><a class="btn secondary" id="primary-review" href="/review">Compare deliveries</a></div>
+</div><details class="sample" id="sample-panel" open><summary><h2 id="sample-title">Example check</h2></summary><div class="sample-inner"><p class="fine">Built-in test data. No upload.</p>
+<label for="sample-select">Example<select id="sample-select"><option value="bad">Email · invalid example</option><option value="good">Email · valid example</option><option value="ip">IPv4 · invalid example</option></select></label>
+<button type="button" id="sample-run" disabled>Check example</button>
+<div id="sample-output" class="sample-output" role="status" aria-live="polite">Choose an example to see its result.</div>
+<p class="fine">Your own input stays in the private tool.</p>
+</div></details></section>
+<div class="secondary-actions"><button type="button" data-open="more">Details &amp; API</button><button type="button" data-open="plans"><span id="price-note">API plans</span></button></div>
+</main>
+<footer class="footer"><details class="site-info"><summary>Legal &amp; support</summary><div class="site-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/refund">Refunds</a><a href="mailto:algorithmchoice@gmail.com">Support</a><span>Operated by MIGYEONG KIM (김미경)</span></div></details></footer></div>
+<dialog id="more" aria-labelledby="more-title"><div class="dialog-head"><h2 id="more-title">Features &amp; developer details</h2><button class="secondary" data-close type="button">Close</button></div>
+<div class="details-block"><h3>What it does</h3><p>Column-contract comparison and error explanations, not just individual format checks.</p><p>Check email, IP, UUID and other text formats. Audit CSV or JSON and compare deliveries with a reusable contract.</p><p><strong>Limitations:</strong> Syntax and format checks only; no mailbox, network or malware verification.</p><p><a href="https://github.com/deepstriker88/format-inspector-lite">Review MIT source and documentation</a> · <a href="https://www.npmjs.com/package/format-inspector-lite">Published npm 0.1.0 package</a></p><pre>npm install format-inspector-lite</pre></div>
+<div class="details-block"><h3>Hosted API example</h3><pre>curl -X POST https://format-inspector.eztoolgo.duckdns.org/v1/inspect \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"format":"email","value":"user@example.com"}'</pre><p>The paid endpoint requires a managed API key and returns usage metadata. The free npm package requires no account.</p></div>
+<div class="details-block"><details><summary>Try the hosted API demo</summary><p class="legal">This separate API demo sends inputs to our server. Use synthetic examples only. For private data, <a href="/">use the browser-only tool</a>.</p><label>Format<select id="demo-format"><option>email</option><option>hostname</option><option>ipv4</option><option>ipv6</option><option>uuid</option><option>date</option><option>time</option><option>uri</option></select></label><label>Value<input id="demo-value" value="user@example.com"></label><button id="run-demo">Run demo</button><pre id="demo-result" class="demo-result">No request yet</pre><p class="legal">Syntax and format checks only. It does not verify mailbox existence, website availability, malware, or full schema validity.</p></details></div>
+</dialog>
+<dialog id="plans" aria-labelledby="plans-title"><div class="dialog-head"><h2 id="plans-title">Free first. Paid API is optional.</h2><button type="button" class="secondary" data-close>Close</button></div>
+<p class="legal">The free browser tools and MIT npm core stay free. Paid plans add hosted access, managed keys and larger request quotas, not extra validation rules.</p>
+<div class="plan-grid">
+<div class="plan"><div><h3>Free local</h3><p>Browser checks and MIT npm package</p></div><div class="plan-actions"><div class="price">$0</div><a href="https://www.npmjs.com/package/format-inspector-lite">Install free</a></div></div>
+<div class="plan"><div><h3>Pro</h3><p><span id="pro-limit">25,000</span> hosted API calls/month</p></div><div class="plan-actions"><div class="price" id="pro-price">$2.99<small>/mo</small></div><button class="buy" data-plan="pro" disabled>Choose Pro</button></div></div>
+<div class="plan"><div><h3>Team</h3><p><span id="team-limit">250,000</span> hosted API calls/month</p></div><div class="plan-actions"><div class="price" id="team-price">$6.99<small>/mo</small></div><button class="buy" data-plan="team" disabled>Choose Team</button></div></div>
+</div><p id="plan-status" class="status" role="status" aria-live="polite">Configured preview prices only. Live money remains disabled pending provider approval.</p>
+<p class="legal">Recurring monthly subscription. Paddle is Merchant of Record. Taxes and final totals shown at checkout.</p>
+<div id="checkout-fields" hidden><label>Email<input id="plan-email" type="email" autocomplete="email" placeholder="you@example.com"></label><label class="check"><input id="accept-terms" type="checkbox"><span>I accept the <a href="/terms">Terms</a> and <a href="/refund">Refund Policy</a> and acknowledge the <a href="/privacy">Privacy Policy</a></span></label></div>
+<div id="plan-result" role="status" aria-live="polite"></div><div id="api-key-box"></div>
+<p class="fine"><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refund">Refund policy</a></p>
+</dialog>
+<script src="/app.js" defer></script><script type="module" src="/landing-example.js"></script>
+</body></html>

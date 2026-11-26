@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const hostedRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const read=(name)=>fs.readFileSync(path.join(hostedRoot,"public",name),"utf8");
-const index=read("index.html");
+const index=read("api.html");
 const terms=read("terms.html");
 const privacy=read("privacy.html");
 const refund=read("refund.html");

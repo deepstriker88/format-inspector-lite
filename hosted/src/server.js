@@ -699,10 +699,10 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
     if (isStaticRead && route === "/review/strict-json.js") return serveStatic(res, "../../src/strict-json.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/review/contract.js") return serveStatic(res, "../../src/contract.js", "application/javascript; charset=utf-8", headOnly);
     if (isStaticRead && route === "/review/csv.js") return serveStatic(res, "../../src/csv.js", "application/javascript; charset=utf-8", headOnly);
-    if (isStaticRead && route === "/try") {
+    if (isStaticRead && (route === "/try" || route === "/")) {
       res.setHeader("content-security-policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'");
       res.setHeader("referrer-policy", "no-referrer");
-      return serveStatic(res, "try.html", undefined, headOnly);
+      return serveStatic(res, route === "/" ? "index.html" : "try.html", undefined, headOnly);
     }
     if (isStaticRead && route === "/try/style.css") return serveStatic(res, "try.css", "text/css; charset=utf-8", headOnly);
     if (isStaticRead && route === "/try/tool.js") return serveStatic(res, "try.js", "application/javascript; charset=utf-8", headOnly);
@@ -716,7 +716,7 @@ const server = http.createServer({maxHeaderSize:8192,headersTimeout:10000,reques
     if (isStaticRead && route === "/terms") return serveStatic(res, "terms.html", undefined, headOnly);
     if (isStaticRead && route === "/privacy") return serveStatic(res, "privacy.html", undefined, headOnly);
     if (isStaticRead && route === "/refund") return serveStatic(res, "refund.html", undefined, headOnly);
-    if (isStaticRead && route === "/") return serveStatic(res, "index.html", undefined, headOnly);
+    if (isStaticRead && route === "/api") return serveStatic(res, "api.html", undefined, headOnly);
 
     return json(res, 404, { error: "not_found" });
   } catch (error) {

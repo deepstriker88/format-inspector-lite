@@ -82,4 +82,4 @@ document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",(
 }));
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
 
-readConfig().then(c=>{$("price-note").textContent="Free $0 · API from $"+c.pricing.pro.usdMonthly.toFixed(2)+"/mo (preview)"}).catch(()=>{$("price-note").textContent="Free $0 · paid prices unavailable"});
+if (window.location?.hash === "#plans") {const dialog=$("plans");if(!dialog.open)dialog.showModal();loadConfig();}

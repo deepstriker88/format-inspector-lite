@@ -37,7 +37,7 @@ test("provider price is inserted as text, not markup",async()=>{
 });
 
 test("published stable package is presented as installable",()=>{
- const html=fs.readFileSync(new URL("../public/index.html",import.meta.url),"utf8");
+ const html=fs.readFileSync(new URL("../public/api.html",import.meta.url),"utf8");
  assert.ok(html.includes("npm 0.1.0"));
  assert.ok(html.includes("npm install format-inspector-lite"));
 });
