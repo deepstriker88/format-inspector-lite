@@ -67,6 +67,11 @@ try{
      for(const plan of ["pro","team"]){const price=config.pricing[plan];assert.ok((await dialog.textContent()).includes("$"+price.usdMonthly.toFixed(2)));assert.ok((await dialog.textContent()).includes(price.monthlyRequests.toLocaleString("en-US")))}
      assert.match(await dialog.textContent(),/real-money payments are not enabled/);
      assert.equal(await dialog.locator("a.ez-continue").getAttribute("target"),"_blank");
+     for(const link of await dialog.locator("a").all()){
+      assert.equal(await link.getAttribute("target"),"_blank");
+      assert.match(await link.getAttribute("rel"),/noopener/);
+     }
+
      if(route==="/"&&width===390){
       const popupPromise=p.waitForEvent("popup");
       await dialog.locator("a.ez-continue").click();

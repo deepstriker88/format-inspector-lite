@@ -6,6 +6,8 @@ test("preview is local, prices come from validated configuration, no credential 
  const s=renderPlans("a<!-- ez-plans -->b",{mode:"sandbox",ready:true,proPrice:4.99,teamPrice:9.99,proLimit:100000,teamLimit:1000000});
  assert.match(s,/id="ez-plans"/);assert.match(s,/\$4.99/);assert.match(s,/1,000,000/);assert.match(s,/real-money payments are not enabled/);assert.match(s,/target="_blank" rel="noopener"/);
  assert.doesNotMatch(s,/cdn.paddle|fetch\(|<form|<input|<iframe/);
+ assert.match(s,/href="\/key-recovery" target="_blank" rel="noopener noreferrer"/);
+ assert.match(s,/href="\/key-backup" target="_blank" rel="noopener noreferrer"/);
  const bad=renderPlans("<!-- ez-plans -->",{mode:"<script>",proPrice:"<script>",teamPrice:NaN,proLimit:-1,teamLimit:Infinity});
  assert.doesNotMatch(bad,/<script>/);assert.match(bad,/Not configured/);
  assert.equal(renderPlans("unchanged",{}),"unchanged");

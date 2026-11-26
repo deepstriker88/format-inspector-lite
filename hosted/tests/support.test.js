@@ -8,5 +8,6 @@ test("voluntary support is absent until a valid account is configured",()=>{
  const link=supportLink("synthetic_fixture");
  assert.match(link,/href="https:\/\/buymeacoffee\.com\/synthetic_fixture"/);
  assert.doesNotMatch(link,/<script|<iframe|<img/);
+ assert.match(link,/target="_blank" rel="noreferrer noopener"/);
  assert.equal(renderSupport(html,"synthetic_fixture"),"start"+link+"end");
 });
