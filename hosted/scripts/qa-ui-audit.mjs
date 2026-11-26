@@ -29,7 +29,7 @@ try{
    const p=await context.newPage();p.on("pageerror",e=>pageErrors.push(e.message));
    let palette;
    for(const route of paths){
-    await p.goto(base+route,{waitUntil:"domcontentloaded"});
+    await p.goto(base+route,{waitUntil:"load"});
     await p.locator("h1").first().waitFor({state:"visible"});
     const state=await p.evaluate(()=>{
       const root=getComputedStyle(document.documentElement),body=getComputedStyle(document.body),head=getComputedStyle(document.querySelector("h1"));
@@ -70,7 +70,7 @@ try{
      if(route==="/"&&width===390){
       const popupPromise=p.waitForEvent("popup");
       await dialog.locator("a.ez-continue").click();
-      const popup=await popupPromise;await popup.waitForLoadState("domcontentloaded");
+      const popup=await popupPromise;await popup.waitForLoadState("load");
       assert.equal(new URL(popup.url()).pathname,"/api");
       assert.equal(new URL(popup.url()).hash,"#plans");
       await popup.locator("#plans,#plans-dialog").waitFor({state:"visible"});
@@ -88,7 +88,7 @@ try{
     if(width===390||width===1440)await p.screenshot({path:"qa-screenshots/ui-audit/"+colorScheme+"-"+width+"-"+(route.slice(1)||"home")+".png"});
     results.push({route,width,height,colorScheme,layout:"pass",theme:"pass",modal:modalPaths.has(route)?"pass":"n/a"});
    }
-   await p.goto(base+"/api#plans",{waitUntil:"domcontentloaded"});
+   await p.goto(base+"/api#plans",{waitUntil:"load"});
    const billing=p.locator("#plans,#plans-dialog");
    await billing.waitFor({state:"visible"});
    const bounds=await billing.boundingBox();
