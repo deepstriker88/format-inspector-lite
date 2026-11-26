@@ -67,6 +67,7 @@ async function pollClaim(){
   const r=await fetch("/billing/claim",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(activeClaim)});
   const d=await r.json();
   if(r.status===200&&d.apiKey){const box=document.createElement("div"),label=document.createElement("strong");box.className="key";label.textContent="Copy this API key now";box.append(label,document.createElement("br"),document.createTextNode(String(d.apiKey)));$("api-key-box").replaceChildren(box);sessionStorage.removeItem("fil-active-claim");activeClaim=null;$("resume-claim").hidden=true;setStatus("Provisioning complete — save your key securely");return}
+  if(r.status===403&&d.error==="payment_adjustment_hold"){setStatus("Payment is under a refund or dispute hold. Contact support with the receipt; do not buy again to resolve it.");return}
   if(r.status===410||r.status===401){sessionStorage.removeItem("fil-active-claim");activeClaim=null;$("resume-claim").hidden=true;setStatus("Claim expired or unavailable. Contact support with your receipt before purchasing again.");return}
   await new Promise(res=>setTimeout(res,1200));
  }
@@ -83,6 +84,7 @@ document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",(
 }));
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
 
-if (window.location?.hash === "#plans") {const dialog=$("plans");if(!dialog.open)dialog.showModal();loadConfig();}
+const hasPaymentLink=/(?:^|[?&])_ptxn=txn_[a-z0-9]{26}(?:&|$)/.test(window.location?.search||"");
+if (window.location?.hash === "#plans" || hasPaymentLink) {const dialog=$("plans");if(!dialog.open)dialog.showModal();loadConfig();}
 
 $("resume-claim").addEventListener("click",pollClaim);
